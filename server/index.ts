@@ -22,11 +22,6 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
-  // Test API key endpoint
-  app.get("/api/test-key", validateApiKey, (_req, res) => {
-    res.json({ success: true, message: "API key is valid!" });
-  });
-
   // Image upload endpoint with API key validation
   app.post("/api/upload", validateApiKey, uploadMiddleware, handleUpload);
 

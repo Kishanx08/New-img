@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { UploadResponse, API_KEY } from "@shared/api";
+import { UploadResponse } from "@shared/api";
 import favicon from '/public/favicon.ico';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
@@ -81,9 +81,6 @@ export default function Index() {
     try {
       const response = await fetch("/api/upload", {
         method: "POST",
-        headers: {
-          "X-API-Key": API_KEY,
-        },
         body: formData,
       });
 

@@ -10,56 +10,22 @@ const API_KEY = "23b1f555338093877bf1a45d1a82582fd4789f6863933b091f06f7dce8c600c
 
 // API Key validation middleware
 const validateApiKey: RequestHandler = (req, res, next) => {
-  console.log('🔍 API Key Validation Debug:');
-  console.log('Method:', req.method);
-  console.log('Path:', req.path);
-  console.log('All Headers:', Object.keys(req.headers));
-  
-  // Helper function to safely get header value
-  const getHeaderValue = (name: string): string | undefined => {
-    const value = req.headers[name];
-    return Array.isArray(value) ? value[0] : value;
-  };
-  
-  // Check multiple possible header names
-  const authHeader = getHeaderValue('authorization') || getHeaderValue('Authorization');
-  const authKey = authHeader?.replace('Bearer ', '');
-  
-  const apiKey = getHeaderValue('x-api-key') || 
-                 getHeaderValue('x-apikey') || 
-                 getHeaderValue('api-key') ||
-                 authKey;
-  
-  console.log('Extracted API Key:', apiKey ? `${apiKey.substring(0, 8)}...` : 'undefined');
-  console.log('Expected API Key:', `${API_KEY.substring(0, 8)}...`);
-  console.log('Keys match:', apiKey === API_KEY);
+  const apiKey = req.headers['x-api-key'] || req.headers['authorization']?.replace('Bearer ', '');
   
   if (!apiKey) {
-    console.log('❌ No API key provided');
     return res.status(401).json({
       success: false,
-      error: "API key required",
-      debug: {
-        providedHeaders: Object.keys(req.headers),
-        expectedHeader: 'X-API-Key'
-      }
+      error: "API key required"
     });
   }
   
   if (apiKey !== API_KEY) {
-    console.log('❌ Invalid API key');
     return res.status(403).json({
       success: false,
-      error: "Invalid API key",
-      debug: {
-        providedKeyLength: apiKey.length,
-        expectedKeyLength: API_KEY.length,
-        keyMatch: apiKey === API_KEY
-      }
+      error: "Invalid API key"
     });
   }
   
-  console.log('✅ API key validated successfully');
   next();
 };
 
@@ -165,20 +131,14 @@ export const handleUpload: RequestHandler = (req, res) => {
 
   // Use the full filename as ID (includes timestamp)
   const imageId = req.file.filename;
-  
-  // Get the base URL from the request
-  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-  const host = req.headers.host;
-  const baseUrl = `${protocol}://${host}`;
-  
   const response: UploadResponse & { shortUrl: string } = {
     success: true,
     imageId,
-    url: `${baseUrl}/api/images/${req.file.filename}`,
+    url: `/api/images/${req.file.filename}`,
     originalName: req.file.originalname,
     size: req.file.size,
     uploadedAt: new Date().toISOString(),
-    shortUrl: `${baseUrl}/i/${shortId}`,
+    shortUrl: `/i/${shortId}`,
   };
 
   res.json(response);
