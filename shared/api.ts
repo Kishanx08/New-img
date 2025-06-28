@@ -1,12 +1,27 @@
-/**
- * Shared code between client and server
- * Useful to share types between client and server
- * and/or small pure JS functions that can be used on both client and server
- */
-
-/**
- * Example response type for /api/demo
- */
 export interface DemoResponse {
   message: string;
+}
+
+export interface UploadResponse {
+  success: boolean;
+  imageId: string;
+  url: string;
+  originalName: string;
+  size: number;
+  uploadedAt: string;
+}
+
+export interface ImageMetadata {
+  id: string;
+  originalName: string;
+  filename: string;
+  url: string;
+  size: number;
+  uploadedAt: string;
+  views: number;
+}
+
+export interface ErrorResponse {
+  success: false;
+  error: string;
 }
