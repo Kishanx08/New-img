@@ -1,0 +1,24 @@
+{
+  "Version": "15.0.0",
+  "Name": "X02 Image Host",
+  "DestinationType": "ImageUploader, FileUploader",
+  "RequestMethod": "POST",
+  "RequestURL": "https://your-domain.netlify.app/api/upload",
+  "Headers": {
+    "X-API-Key": "23b1f555338093877bf1a45d1a82582fd4789f6863933b091f06f7dce8c600ca"
+  },
+  "Body": "MultipartFormData",
+  "FileFormName": "image",
+  "URL": "$json:url$",
+  "ThumbnailURL": "$json:url$",
+  "DeletionURL": "",
+  "Arguments": {},
+  "ResponseType": "JSON",
+  "RegexList": [],
+  "Settings": {
+    "Name": "X02 Image Host",
+    "Description": "Secure image hosting with API key protection",
+    "Category": "Image Hosting",
+    "Author": "X02 Team"
+  }
+} 
