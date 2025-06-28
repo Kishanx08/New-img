@@ -20,19 +20,33 @@ const sanitizeFilename = (filename: string) => {
     .replace(/^_+|_+$/g, "");
 };
 
+// Helper function to get next available number for filename
+const getNextFileNumber = (baseName: string, extension: string) => {
+  let counter = 1;
+  let filename = `${baseName}_${counter.toString().padStart(2, "0")}${extension}`;
+
+  // Check if file exists, increment counter until we find available name
+  while (fs.existsSync(path.join(uploadsDir, filename))) {
+    counter++;
+    filename = `${baseName}_${counter.toString().padStart(2, "0")}${extension}`;
+  }
+
+  return filename;
+};
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, uploadsDir);
   },
   filename: (_req, file, cb) => {
-    const timestamp = Date.now();
     const sanitized = sanitizeFilename(file.originalname);
     const name = path.parse(sanitized).name;
     const extension = path.extname(sanitized);
 
-    // Add timestamp to prevent duplicates: filename_1234567890.ext
-    cb(null, `${name}_${timestamp}${extension}`);
+    // Get next available number: filename_01.ext, filename_02.ext, etc.
+    const finalFilename = getNextFileNumber(name, extension);
+    cb(null, finalFilename);
   },
 });
 
