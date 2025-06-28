@@ -3,7 +3,7 @@
   "Name": "X02 Image Host",
   "DestinationType": "ImageUploader, FileUploader",
   "RequestMethod": "POST",
-  "RequestURL": "https://x02.me/api/upload",
+  "RequestURL": "https://your-domain.netlify.app/api/upload",
   "Headers": {
     "X-API-Key": "23b1f555338093877bf1a45d1a82582fd4789f6863933b091f06f7dce8c600ca"
   },
