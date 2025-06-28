@@ -101,10 +101,10 @@ export default function ImageView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full gradient-bg flex items-center justify-center animate-pulse">
-            <Image className="h-8 w-8 text-white" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
+            <Image className="h-8 w-8 text-primary" />
           </div>
           <p className="text-lg font-medium">Loading image...</p>
         </div>
@@ -129,9 +129,9 @@ export default function ImageView() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card/80 backdrop-blur-sm">
+      <header className="glass-effect border-b border-border/50">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -142,10 +142,12 @@ export default function ImageView() {
                 </Link>
               </Button>
               <div className="flex items-center gap-3">
-                <div className="p-2 gradient-bg rounded-lg">
-                  <Image className="h-6 w-6 text-white" />
+                <div className="p-2 bg-primary rounded-xl">
+                  <Image className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <h1 className="text-2xl font-bold gradient-text">KishanX02</h1>
+                <h1 className="text-2xl font-bold text-foreground">
+                  KishanX02
+                </h1>
               </div>
             </div>
             <div className="flex gap-2">

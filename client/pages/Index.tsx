@@ -1,5 +1,12 @@
 import { useState, useRef, useCallback } from "react";
-import { Upload, Image, Link, Copy, Download, FileImage } from "lucide-react";
+import {
+  Upload,
+  Image,
+  Copy,
+  Download,
+  FileImage,
+  Grid3X3,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
@@ -17,6 +24,7 @@ export default function Index() {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
+  const [showGallery, setShowGallery] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
@@ -71,6 +79,7 @@ export default function Index() {
         };
 
         setUploadedImages((prev) => [newImage, ...prev]);
+        setShowGallery(true);
         toast({
           title: "Upload successful!",
           description: `${file.name} has been uploaded`,
@@ -151,101 +160,120 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
+      <header className="glass-effect sticky top-0 z-50">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 gradient-bg rounded-lg">
-                <Image className="h-6 w-6 text-white" />
+              <div className="p-2 bg-primary rounded-xl">
+                <Image className="h-6 w-6 text-primary-foreground" />
               </div>
-              <h1 className="text-2xl font-bold gradient-text">KishanX02</h1>
+              <h1 className="text-2xl font-bold text-foreground">KishanX02</h1>
             </div>
-            <Button variant="outline" size="sm">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowGallery(!showGallery)}
+              className="gap-2"
+            >
+              <Grid3X3 className="h-4 w-4" />
               Gallery
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-6 py-16">
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h2 className="text-5xl font-bold mb-4">
-            Upload & Share Images
-            <br />
-            <span className="gradient-text">Instantly</span>
+        <div className="max-w-4xl mx-auto text-center mb-16">
+          <h2 className="text-6xl font-bold mb-6 text-foreground">
+            Professional Image Hosting
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Fast, reliable image hosting with instant sharing links. Upload your
-            images and get shareable URLs in seconds.
+            Upload, share, and manage your images with enterprise-grade
+            reliability. Get instant shareable links for all your visual
+            content.
           </p>
         </div>
 
         {/* Upload Area */}
-        <Card className="max-w-2xl mx-auto mb-12 p-8">
-          <div
-            className={`upload-zone rounded-lg p-12 text-center cursor-pointer transition-all ${
-              dragActive ? "border-upload-hover bg-upload-hover/10" : ""
-            }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept="image/*"
-              onChange={handleFileSelect}
-              disabled={uploading}
-            />
+        <Card className="max-w-3xl mx-auto mb-16 border-border/50">
+          <div className="p-8">
+            <div
+              className={`upload-zone rounded-xl p-16 text-center cursor-pointer transition-all ${
+                dragActive ? "border-upload-hover bg-upload-hover/10" : ""
+              }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileSelect}
+                disabled={uploading}
+              />
 
-            {uploading ? (
-              <div className="space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-full gradient-bg flex items-center justify-center animate-pulse">
-                  <Upload className="h-8 w-8 text-white" />
+              {uploading ? (
+                <div className="space-y-6">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
+                    <Upload className="h-10 w-10 text-primary animate-pulse" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-semibold text-foreground">
+                      Processing...
+                    </p>
+                    <p className="text-muted-foreground">
+                      Your image is being uploaded
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-lg font-medium">Uploading...</p>
-                  <p className="text-sm text-muted-foreground">
-                    Please wait while we process your image
-                  </p>
+              ) : (
+                <div className="space-y-6">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                    <Upload className="h-10 w-10 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xl font-semibold text-foreground">
+                      Drop your image here
+                    </p>
+                    <p className="text-muted-foreground">
+                      or click to select from your device
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 justify-center text-sm text-muted-foreground">
+                    <FileImage className="h-5 w-5" />
+                    <span>Supports JPG, PNG, GIF • Max 10MB</span>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                  <Upload className="h-8 w-8 text-primary" />
-                </div>
-                <div>
-                  <p className="text-lg font-medium">
-                    Drag & drop your image here
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    or click to browse files
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 justify-center text-xs text-muted-foreground">
-                  <FileImage className="h-4 w-4" />
-                  <span>Supports JPG, PNG, GIF up to 10MB</span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </Card>
 
-        {/* Uploaded Images */}
-        {uploadedImages.length > 0 && (
-          <div className="max-w-4xl mx-auto">
-            <h3 className="text-2xl font-semibold mb-6">Recent Uploads</h3>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* Gallery */}
+        {showGallery && uploadedImages.length > 0 && (
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-3xl font-bold text-foreground">
+                Your Images
+              </h3>
+              <p className="text-muted-foreground">
+                {uploadedImages.length} uploaded
+              </p>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {uploadedImages.map((image) => (
-                <Card key={image.id} className="overflow-hidden group">
-                  <div className="aspect-video bg-muted relative overflow-hidden">
+                <Card
+                  key={image.id}
+                  className="overflow-hidden group border-border/50 hover:border-border transition-all"
+                >
+                  <div className="aspect-square bg-muted relative overflow-hidden">
                     <img
                       src={image.url}
                       alt={image.originalName}
@@ -255,7 +283,7 @@ export default function Index() {
                   <div className="p-4 space-y-3">
                     <div>
                       <h4
-                        className="font-medium truncate"
+                        className="font-medium truncate text-foreground"
                         title={image.originalName}
                       >
                         {image.originalName}
@@ -272,8 +300,8 @@ export default function Index() {
                         className="flex-1"
                         onClick={() => copyToClipboard(image.url)}
                       >
-                        <Copy className="h-4 w-4 mr-1" />
-                        Copy Link
+                        <Copy className="h-4 w-4 mr-2" />
+                        Copy
                       </Button>
                       <Button
                         size="sm"
@@ -290,47 +318,20 @@ export default function Index() {
           </div>
         )}
 
-        {/* Features Section */}
-        <div className="max-w-4xl mx-auto mt-20">
-          <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold mb-4">Why Choose KishanX02?</h3>
+        {/* Empty Gallery State */}
+        {showGallery && uploadedImages.length === 0 && (
+          <div className="max-w-2xl mx-auto text-center py-16">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
+              <Grid3X3 className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-semibold mb-2 text-foreground">
+              No images yet
+            </h3>
             <p className="text-muted-foreground">
-              Simple, fast, and reliable image hosting for everyone
+              Upload your first image to see it in the gallery
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                <Upload className="h-6 w-6 text-primary" />
-              </div>
-              <h4 className="font-semibold mb-2">Instant Upload</h4>
-              <p className="text-sm text-muted-foreground">
-                Drag, drop, and share. Upload images in seconds with our
-                streamlined interface.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
-                <Link className="h-6 w-6 text-accent" />
-              </div>
-              <h4 className="font-semibold mb-2">Direct Links</h4>
-              <p className="text-sm text-muted-foreground">
-                Get shareable URLs instantly. Perfect for forums, social media,
-                and websites.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                <Image className="h-6 w-6 text-primary" />
-              </div>
-              <h4 className="font-semibold mb-2">High Quality</h4>
-              <p className="text-sm text-muted-foreground">
-                Your images stay crisp and clear. No compression, no quality
-                loss.
-              </p>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
