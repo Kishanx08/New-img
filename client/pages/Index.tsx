@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import {
   Upload,
   Image,
@@ -6,6 +6,9 @@ import {
   Download,
   FileImage,
   Grid3X3,
+  Sparkles,
+  Zap,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,7 +28,12 @@ export default function Index() {
   const [uploading, setUploading] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [showGallery, setShowGallery] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -81,8 +89,8 @@ export default function Index() {
         setUploadedImages((prev) => [newImage, ...prev]);
         setShowGallery(true);
         toast({
-          title: "Upload successful!",
-          description: `${file.name} has been uploaded`,
+          title: "🎉 Upload successful!",
+          description: `${file.name} is ready to share`,
         });
       } else {
         throw new Error("Upload failed");
@@ -113,8 +121,8 @@ export default function Index() {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(fullUrl);
         toast({
-          title: "Link copied!",
-          description: "Image URL copied to clipboard",
+          title: "✨ Link copied!",
+          description: "Ready to share anywhere",
         });
         return;
       }
@@ -134,8 +142,8 @@ export default function Index() {
 
       if (successful) {
         toast({
-          title: "Link copied!",
-          description: "Image URL copied to clipboard",
+          title: "✨ Link copied!",
+          description: "Ready to share anywhere",
         });
       } else {
         throw new Error("Copy command failed");
@@ -159,50 +167,77 @@ export default function Index() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="gradient-primary w-12 h-12 rounded-full animate-pulse-slow"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Animated Background */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-20 left-10 w-72 h-72 gradient-primary rounded-full blur-3xl animate-float"></div>
+        <div
+          className="absolute bottom-20 right-10 w-96 h-96 gradient-secondary rounded-full blur-3xl animate-float"
+          style={{ animationDelay: "1s" }}
+        ></div>
+        <div
+          className="absolute top-1/2 left-1/2 w-64 h-64 gradient-accent rounded-full blur-3xl animate-float"
+          style={{ animationDelay: "2s" }}
+        ></div>
+      </div>
+
       {/* Header */}
-      <header className="glass-effect sticky top-0 z-50">
+      <header className="glass-effect sticky top-0 z-50 animate-slide-up">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-xl">
-                <Image className="h-6 w-6 text-primary-foreground" />
+            <div className="flex items-center gap-4">
+              <div className="p-3 gradient-primary rounded-2xl glow animate-pulse-slow">
+                <Image className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-foreground">KishanX02</h1>
+              <h1 className="text-3xl font-bold text-gradient">KishanX02</h1>
             </div>
             <Button
               variant="outline"
-              size="sm"
+              size="lg"
               onClick={() => setShowGallery(!showGallery)}
-              className="gap-2"
+              className="gap-2 hover-lift bg-card/50 backdrop-blur-sm border-border/50"
             >
-              <Grid3X3 className="h-4 w-4" />
+              <Grid3X3 className="h-5 w-5" />
               Gallery
+              {uploadedImages.length > 0 && (
+                <span className="bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs">
+                  {uploadedImages.length}
+                </span>
+              )}
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-16">
+      <div className="container mx-auto px-6 py-16 relative z-10">
         {/* Hero Section */}
-        <div className="max-w-4xl mx-auto text-center mb-16">
-          <h2 className="text-6xl font-bold mb-6 text-foreground">
-            Professional Image Hosting
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Upload, share, and manage your images with enterprise-grade
-            reliability. Get instant shareable links for all your visual
-            content.
+        <div className="max-w-5xl mx-auto text-center mb-20 animate-fade-in">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <Sparkles className="h-8 w-8 text-accent animate-pulse" />
+            <h2 className="text-7xl font-black text-gradient">Share Images</h2>
+            <Zap className="h-8 w-8 text-primary animate-pulse" />
+          </div>
+          <p className="text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Lightning-fast uploads with instant sharing. Drag, drop, and watch
+            your images come to life.
           </p>
         </div>
 
         {/* Upload Area */}
-        <Card className="max-w-3xl mx-auto mb-16 border-border/50">
-          <div className="p-8">
+        <Card className="max-w-4xl mx-auto mb-20 border-border/50 bg-card/50 backdrop-blur-sm hover-lift animate-slide-up">
+          <div className="p-10">
             <div
-              className={`upload-zone rounded-xl p-16 text-center cursor-pointer transition-all ${
-                dragActive ? "border-upload-hover bg-upload-hover/10" : ""
+              className={`upload-zone rounded-2xl p-20 text-center cursor-pointer relative overflow-hidden ${
+                dragActive ? "border-primary bg-primary/20 scale-105" : ""
               }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
@@ -220,35 +255,46 @@ export default function Index() {
               />
 
               {uploading ? (
-                <div className="space-y-6">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
-                    <Upload className="h-10 w-10 text-primary animate-pulse" />
+                <div className="space-y-8">
+                  <div className="w-24 h-24 mx-auto rounded-full gradient-primary flex items-center justify-center shimmer">
+                    <Upload className="h-12 w-12 text-white animate-pulse" />
                   </div>
                   <div>
-                    <p className="text-xl font-semibold text-foreground">
-                      Processing...
+                    <p className="text-2xl font-bold text-foreground">
+                      ✨ Uploading Magic...
                     </p>
-                    <p className="text-muted-foreground">
-                      Your image is being uploaded
+                    <p className="text-lg text-muted-foreground">
+                      Your image is being processed
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  <div className="w-20 h-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                    <Upload className="h-10 w-10 text-primary" />
+                <div className="space-y-8">
+                  <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-r from-primary/20 to-accent/20 flex items-center justify-center animate-float">
+                    <Upload className="h-12 w-12 text-primary" />
                   </div>
                   <div>
-                    <p className="text-xl font-semibold text-foreground">
-                      Drop your image here
+                    <p className="text-3xl font-bold text-foreground mb-2">
+                      Drop your magic here
                     </p>
-                    <p className="text-muted-foreground">
-                      or click to select from your device
+                    <p className="text-lg text-muted-foreground">
+                      or click to browse your device
                     </p>
                   </div>
-                  <div className="flex items-center gap-3 justify-center text-sm text-muted-foreground">
-                    <FileImage className="h-5 w-5" />
-                    <span>Supports JPG, PNG, GIF • Max 10MB</span>
+                  <div className="flex items-center gap-4 justify-center text-muted-foreground">
+                    <FileImage className="h-6 w-6" />
+                    <span className="text-lg">JPG, PNG, GIF • Up to 10MB</span>
+                  </div>
+                </div>
+              )}
+
+              {dragActive && (
+                <div className="absolute inset-0 bg-primary/10 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <div className="text-center">
+                    <Zap className="h-16 w-16 text-primary mx-auto mb-4 animate-pulse" />
+                    <p className="text-2xl font-bold text-primary">
+                      Drop it! 🚀
+                    </p>
                   </div>
                 </div>
               )}
@@ -257,79 +303,88 @@ export default function Index() {
         </Card>
 
         {/* Gallery */}
-        {showGallery && uploadedImages.length > 0 && (
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-3xl font-bold text-foreground">
-                Your Images
-              </h3>
-              <p className="text-muted-foreground">
-                {uploadedImages.length} uploaded
-              </p>
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {uploadedImages.map((image) => (
-                <Card
-                  key={image.id}
-                  className="overflow-hidden group border-border/50 hover:border-border transition-all"
-                >
-                  <div className="aspect-square bg-muted relative overflow-hidden">
-                    <img
-                      src={image.url}
-                      alt={image.originalName}
-                      className="w-full h-full object-cover transition-transform group-hover:scale-105"
-                    />
+        {showGallery && (
+          <div className="max-w-7xl mx-auto animate-slide-up">
+            {uploadedImages.length > 0 ? (
+              <>
+                <div className="flex items-center justify-between mb-10">
+                  <div className="flex items-center gap-3">
+                    <Eye className="h-8 w-8 text-accent" />
+                    <h3 className="text-4xl font-bold text-gradient">
+                      Your Gallery
+                    </h3>
                   </div>
-                  <div className="p-4 space-y-3">
-                    <div>
-                      <h4
-                        className="font-medium truncate text-foreground"
-                        title={image.originalName}
-                      >
-                        {image.originalName}
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {formatFileSize(image.size)} •{" "}
-                        {new Date(image.uploadedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1"
-                        onClick={() => copyToClipboard(image.url)}
-                      >
-                        <Copy className="h-4 w-4 mr-2" />
-                        Copy
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => window.open(image.url, "_blank")}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
-                    </div>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/30">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                    <span className="text-primary font-semibold">
+                      {uploadedImages.length} images
+                    </span>
                   </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Empty Gallery State */}
-        {showGallery && uploadedImages.length === 0 && (
-          <div className="max-w-2xl mx-auto text-center py-16">
-            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-muted flex items-center justify-center">
-              <Grid3X3 className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-xl font-semibold mb-2 text-foreground">
-              No images yet
-            </h3>
-            <p className="text-muted-foreground">
-              Upload your first image to see it in the gallery
-            </p>
+                </div>
+                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {uploadedImages.map((image, index) => (
+                    <Card
+                      key={image.id}
+                      className="overflow-hidden group border-border/50 bg-card/50 backdrop-blur-sm hover-lift animate-slide-up"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <div className="aspect-square bg-muted relative overflow-hidden">
+                        <img
+                          src={image.url}
+                          alt={image.originalName}
+                          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
+                      <div className="p-5 space-y-4">
+                        <div>
+                          <h4
+                            className="font-semibold truncate text-foreground text-lg"
+                            title={image.originalName}
+                          >
+                            {image.originalName}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {formatFileSize(image.size)} •{" "}
+                            {new Date(image.uploadedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-3">
+                          <Button
+                            size="sm"
+                            className="flex-1 gradient-primary hover:scale-105 transition-transform"
+                            onClick={() => copyToClipboard(image.url)}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="hover:scale-105 transition-transform bg-card/50"
+                            onClick={() => window.open(image.url, "_blank")}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-20">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-r from-primary/20 to-accent/20 flex items-center justify-center animate-pulse-slow">
+                  <Grid3X3 className="h-10 w-10 text-muted-foreground" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 text-foreground">
+                  Your gallery awaits
+                </h3>
+                <p className="text-lg text-muted-foreground">
+                  Upload your first image to see the magic happen ✨
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
