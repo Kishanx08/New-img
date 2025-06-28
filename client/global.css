@@ -4,49 +4,10 @@
 
 @layer base {
   /**
-   * Modern Image Hosting Theme
-   * Purple/blue gradient with cyan accents
+   * KishanX02 - Dark Image Hosting Theme
+   * Purple/blue gradient with cyan accents - Dark Mode Default
    */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 20% 98%;
-
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-
-    --accent: 185 100% 48%;
-    --accent-foreground: 210 20% 98%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 262 83% 58%;
-
-    --radius: 0.5rem;
-
-    --gradient-start: 262 83% 58%;
-    --gradient-end: 214 100% 59%;
-
-    --upload-border: 220 13% 91%;
-    --upload-bg: 220 14.3% 95.9%;
-    --upload-hover: 185 100% 48%;
-  }
-
-  .dark {
     --background: 224 71.4% 4.1%;
     --foreground: 210 20% 98%;
 
@@ -75,11 +36,50 @@
     --input: 215 27.9% 16.9%;
     --ring: 263 70% 50.4%;
 
+    --radius: 0.5rem;
+
     --gradient-start: 263 70% 50.4%;
     --gradient-end: 214 100% 59%;
 
     --upload-border: 215 27.9% 16.9%;
     --upload-bg: 215 27.9% 16.9%;
+    --upload-hover: 185 100% 48%;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 224 71.4% 4.1%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+
+    --primary: 262 83% 58%;
+    --primary-foreground: 210 20% 98%;
+
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+
+    --accent: 185 100% 48%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 20% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 262 83% 58%;
+
+    --gradient-start: 262 83% 58%;
+    --gradient-end: 214 100% 59%;
+
+    --upload-border: 220 13% 91%;
+    --upload-bg: 220 14.3% 95.9%;
     --upload-hover: 185 100% 48%;
   }
 }
@@ -107,7 +107,7 @@
   }
 
   .upload-zone {
-    @apply border-2 border-dashed border-upload-border bg-upload-bg/50 
+    @apply border-2 border-dashed border-upload-border bg-upload-bg/50
            transition-all duration-200 ease-in-out
            hover:border-upload-hover hover:bg-upload-hover/5;
   }

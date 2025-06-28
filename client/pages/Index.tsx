@@ -132,7 +132,7 @@ export default function Index() {
               <div className="p-2 gradient-bg rounded-lg">
                 <Image className="h-6 w-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold gradient-text">PixelHost</h1>
+              <h1 className="text-2xl font-bold gradient-text">KishanX02</h1>
             </div>
             <Button variant="outline" size="sm">
               Gallery
@@ -265,7 +265,7 @@ export default function Index() {
         {/* Features Section */}
         <div className="max-w-4xl mx-auto mt-20">
           <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold mb-4">Why Choose PixelHost?</h3>
+            <h3 className="text-3xl font-bold mb-4">Why Choose KishanX02?</h3>
             <p className="text-muted-foreground">
               Simple, fast, and reliable image hosting for everyone
             </p>

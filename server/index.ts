@@ -17,7 +17,7 @@ export function createServer() {
 
   // API routes
   app.get("/api/ping", (_req, res) => {
-    res.json({ message: "Hello from PixelHost API!" });
+    res.json({ message: "Hello from KishanX02 API!" });
   });
 
   app.get("/api/demo", handleDemo);

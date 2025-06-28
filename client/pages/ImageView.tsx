@@ -117,7 +117,7 @@ export default function ImageView() {
                 <div className="p-2 gradient-bg rounded-lg">
                   <Image className="h-6 w-6 text-white" />
                 </div>
-                <h1 className="text-2xl font-bold gradient-text">PixelHost</h1>
+                <h1 className="text-2xl font-bold gradient-text">KishanX02</h1>
               </div>
             </div>
             <div className="flex gap-2">
