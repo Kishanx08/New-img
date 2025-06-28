@@ -5,30 +5,6 @@ import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
 import { UploadResponse, ErrorResponse } from "@shared/api";
 
-// API Key configuration
-const API_KEY = "23b1f555338093877bf1a45d1a82582fd4789f6863933b091f06f7dce8c600ca";
-
-// API Key validation middleware
-const validateApiKey: RequestHandler = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'] || req.headers['authorization']?.replace('Bearer ', '');
-  
-  if (!apiKey) {
-    return res.status(401).json({
-      success: false,
-      error: "API key required"
-    });
-  }
-  
-  if (apiKey !== API_KEY) {
-    return res.status(403).json({
-      success: false,
-      error: "Invalid API key"
-    });
-  }
-  
-  next();
-};
-
 // Simple uploads directory in project root
 const uploadsDir = "uploads";
 if (!fs.existsSync(uploadsDir)) {
@@ -108,8 +84,6 @@ const upload = multer({
 });
 
 export const uploadMiddleware = upload.single("image");
-
-export { validateApiKey };
 
 export const handleUpload: RequestHandler = (req, res) => {
   if (!req.file) {

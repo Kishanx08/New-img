@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { handleDemo } from "./routes/demo";
-import { uploadMiddleware, handleUpload, shortLinkRouter, validateApiKey } from "./routes/upload";
+import { uploadMiddleware, handleUpload, shortLinkRouter } from "./routes/upload";
 
 export function createServer() {
   const app = express();
@@ -22,8 +22,8 @@ export function createServer() {
 
   app.get("/api/demo", handleDemo);
 
-  // Image upload endpoint with API key validation
-  app.post("/api/upload", validateApiKey, uploadMiddleware, handleUpload);
+  // Image upload endpoint
+  app.post("/api/upload", uploadMiddleware, handleUpload);
 
   // Short link redirect
   app.use("/i", shortLinkRouter);
