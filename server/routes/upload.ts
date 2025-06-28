@@ -11,15 +11,28 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+// Helper function to sanitize filename
+const sanitizeFilename = (filename: string) => {
+  // Remove dangerous characters and spaces
+  return filename
+    .replace(/[^a-zA-Z0-9.-]/g, "_")
+    .replace(/_{2,}/g, "_")
+    .replace(/^_+|_+$/g, "");
+};
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, uploadsDir);
   },
   filename: (_req, file, cb) => {
-    const uniqueId = uuidv4();
-    const extension = path.extname(file.originalname);
-    cb(null, `${uniqueId}${extension}`);
+    const timestamp = Date.now();
+    const sanitized = sanitizeFilename(file.originalname);
+    const name = path.parse(sanitized).name;
+    const extension = path.extname(sanitized);
+
+    // Add timestamp to prevent duplicates: filename_1234567890.ext
+    cb(null, `${name}_${timestamp}${extension}`);
   },
 });
 
@@ -49,7 +62,8 @@ export const handleUpload: RequestHandler = (req, res) => {
     return res.status(400).json(errorResponse);
   }
 
-  const imageId = path.parse(req.file.filename).name;
+  // Use the full filename as ID (includes timestamp)
+  const imageId = req.file.filename;
   const response: UploadResponse = {
     success: true,
     imageId,

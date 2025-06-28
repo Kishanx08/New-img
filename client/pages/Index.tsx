@@ -97,19 +97,47 @@ export default function Index() {
   };
 
   const copyToClipboard = async (url: string) => {
+    const fullUrl = `${window.location.origin}${url}`;
+
     try {
-      const fullUrl = `${window.location.origin}${url}`;
-      await navigator.clipboard.writeText(fullUrl);
-      toast({
-        title: "Link copied!",
-        description: "Image URL copied to clipboard",
-      });
+      // Try modern clipboard API first (requires HTTPS)
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(fullUrl);
+        toast({
+          title: "Link copied!",
+          description: "Image URL copied to clipboard",
+        });
+        return;
+      }
+
+      // Fallback for HTTP - use legacy method
+      const textArea = document.createElement("textarea");
+      textArea.value = fullUrl;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textArea);
+
+      if (successful) {
+        toast({
+          title: "Link copied!",
+          description: "Image URL copied to clipboard",
+        });
+      } else {
+        throw new Error("Copy command failed");
+      }
     } catch (error) {
       console.error("Copy failed:", error);
+      // Final fallback - show the URL for manual copy
       toast({
-        title: "Copy failed",
-        description: "Unable to copy to clipboard",
-        variant: "destructive",
+        title: "Copy manually",
+        description: fullUrl,
+        duration: 10000,
       });
     }
   };
