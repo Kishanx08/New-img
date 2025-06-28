@@ -1,11 +1,16 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
 import { handleDemo } from "./routes/demo";
 import { uploadMiddleware, handleUpload } from "./routes/upload";
 
 export function createServer() {
   const app = express();
+
+  // Get current directory for ES modules
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
 
   // Middleware
   app.use(cors());
@@ -13,7 +18,7 @@ export function createServer() {
   app.use(express.urlencoded({ extended: true }));
 
   // Serve uploaded images statically
-  app.use("/api/images", express.static(path.join(process.cwd(), "uploads")));
+  app.use("/api/images", express.static(path.join(__dirname, "../uploads")));
 
   // API routes
   app.get("/api/ping", (_req, res) => {
