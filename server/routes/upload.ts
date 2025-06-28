@@ -3,15 +3,10 @@ import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
-import { fileURLToPath } from "url";
 import { UploadResponse, ErrorResponse } from "@shared/api";
 
-// Get current directory for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Ensure uploads directory exists
-const uploadsDir = path.join(__dirname, "../../uploads");
+// Simple uploads directory in project root
+const uploadsDir = "uploads";
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
