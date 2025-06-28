@@ -4,93 +4,82 @@
 
 @layer base {
   /**
-   * KishanX02 - Dynamic Modern Theme
-   * Vibrant colors with smooth animations
+   * X02 - Black & White Theme
+   * Strictly black, white, and grayscale only
    */
   :root {
-    --background: 6 6 8;
+    --background: 0 0 0;
     --foreground: 255 255 255;
 
-    --card: 15 15 20;
+    --card: 24 24 24;
     --card-foreground: 255 255 255;
 
-    --popover: 15 15 20;
+    --popover: 24 24 24;
     --popover-foreground: 255 255 255;
 
-    --primary: 147 51 234;
-    --primary-foreground: 255 255 255;
+    --primary: 255 255 255;
+    --primary-foreground: 0 0 0;
 
-    --secondary: 30 30 40;
+    --secondary: 40 40 40;
     --secondary-foreground: 255 255 255;
 
-    --muted: 40 40 50;
-    --muted-foreground: 180 180 190;
+    --muted: 80 80 80;
+    --muted-foreground: 180 180 180;
 
-    --accent: 14 165 233;
-    --accent-foreground: 255 255 255;
+    --accent: 180 180 180;
+    --accent-foreground: 30 30 30;
 
-    --destructive: 239 68 68;
+    --destructive: 100 100 100;
     --destructive-foreground: 255 255 255;
 
-    --border: 40 40 50;
-    --input: 30 30 40;
-    --ring: 147 51 234;
+    --border: 100 100 100;
+    --input: 30 30 30;
+    --ring: 255 255 255;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    --upload-border: 80 80 100;
-    --upload-bg: 20 20 30;
-    --upload-hover: 147 51 234;
+    --upload-border: 120 120 120;
+    --upload-bg: 30 30 30;
+    --upload-hover: 255 255 255;
 
-    --gradient-primary: linear-gradient(
-      135deg,
-      rgb(147, 51, 234),
-      rgb(14, 165, 233)
-    );
-    --gradient-secondary: linear-gradient(
-      135deg,
-      rgb(14, 165, 233),
-      rgb(59, 130, 246)
-    );
-    --gradient-accent: linear-gradient(
-      135deg,
-      rgb(236, 72, 153),
-      rgb(239, 68, 68)
-    );
+    --gradient-primary: linear-gradient(135deg, #fff, #000);
+    --gradient-secondary: linear-gradient(135deg, #bbb, #222);
+    --gradient-accent: linear-gradient(135deg, #fff, #888);
+    --gradient-neon: linear-gradient(45deg, #fff, #222, #bbb, #fff);
   }
 
   .light {
     --background: 255 255 255;
-    --foreground: 15 15 15;
+    --foreground: 0 0 0;
 
-    --card: 250 250 250;
-    --card-foreground: 15 15 15;
+    --card: 245 245 245;
+    --card-foreground: 0 0 0;
 
     --popover: 255 255 255;
-    --popover-foreground: 15 15 15;
+    --popover-foreground: 0 0 0;
 
-    --primary: 147 51 234;
+    --primary: 30 30 30;
     --primary-foreground: 255 255 255;
 
-    --secondary: 240 240 245;
-    --secondary-foreground: 15 15 15;
+    --secondary: 220 220 220;
+    --secondary-foreground: 0 0 0;
 
-    --muted: 245 245 250;
-    --muted-foreground: 100 100 120;
+    --muted: 200 200 200;
+    --muted-foreground: 100 100 100;
 
-    --accent: 14 165 233;
-    --accent-foreground: 255 255 255;
+    --accent: 180 180 180;
+    --accent-foreground: 30 30 30;
 
-    --destructive: 239 68 68;
+    --destructive: 100 100 100;
     --destructive-foreground: 255 255 255;
 
-    --border: 220 220 230;
-    --input: 240 240 245;
-    --ring: 147 51 234;
+    --border: 180 180 180;
+    --input: 240 240 240;
+    --ring: 30 30 30;
 
-    --upload-border: 200 200 220;
-    --upload-bg: 250 250 255;
-    --upload-hover: 147 51 234;
+    --upload-border: 160 160 160;
+    --upload-bg: 250 250 250;
+    --upload-hover: 30 30 30;
   }
 }
 
@@ -109,42 +98,62 @@
 
 @layer utilities {
   .upload-zone {
-    @apply border-2 border-dashed border-upload-border bg-upload-bg/50
-           transition-all duration-300 ease-out
-           hover:border-upload-hover hover:bg-upload-hover/10 hover:scale-[1.02]
-           hover:shadow-lg hover:shadow-primary/25;
+    background: rgba(30,30,30,0.95) !important;
+    @apply border-2 border-dashed border-upload-border transition-all duration-300 ease-out hover:border-upload-hover hover:bg-upload-hover/10 hover:scale-[1.02] hover:shadow-lg hover:shadow-primary/25 backdrop-blur-sm;
   }
 
   .glass-effect {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+    background: rgba(24,24,24,0.98) !important;
+    @apply backdrop-blur-xl border border-border/50;
+  }
+
+  .neon-border {
+    @apply border border-primary/50 shadow-lg shadow-primary/25;
+  }
+
+  .cyber-card {
+    background: rgba(24,24,24,0.95) !important;
+    @apply backdrop-blur-md border border-border/30
+           hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20
+           transition-all duration-300;
   }
 
   .gradient-primary {
-    background: var(--gradient-primary);
+    background: linear-gradient(135deg, #ffffff, #000) !important;
   }
 
   .gradient-secondary {
-    background: var(--gradient-secondary);
+    background: linear-gradient(135deg, #bbb, #222) !important;
   }
 
   .gradient-accent {
-    background: var(--gradient-accent);
+    background: linear-gradient(135deg, #fff, #888) !important;
+  }
+
+  .gradient-neon {
+    background: linear-gradient(45deg, #fff, #222, #bbb, #fff) !important;
+    background-size: 400% 400%;
+    animation: neonShift 3s ease-in-out infinite;
   }
 
   .animate-float {
-    animation: float 3s ease-in-out infinite;
+    animation: float 4s ease-in-out infinite;
   }
 
   .animate-pulse-slow {
-    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
   .animate-slide-up {
-    animation: slideUp 0.6s ease-out forwards;
+    animation: slideUp 0.8s ease-out forwards;
   }
 
   .animate-fade-in {
-    animation: fadeIn 0.8s ease-out forwards;
+    animation: fadeIn 1s ease-out forwards;
+  }
+
+  .animate-glow {
+    box-shadow: 0 0 40px 0 rgba(255,255,255,0.15) !important;
   }
 
   .hover-lift {
@@ -158,22 +167,28 @@
   .text-gradient {
     @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
   }
+
+  .text-neon {
+    @apply bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent;
+    background-size: 200% 200%;
+    animation: neonText 2s ease-in-out infinite;
+  }
 }
 
 @keyframes float {
   0%,
   100% {
-    transform: translateY(0px);
+    transform: translateY(0px) rotate(0deg);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-15px) rotate(2deg);
   }
 }
 
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(40px);
   }
   to {
     opacity: 1;
@@ -184,9 +199,29 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes neonShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes neonText {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
   }
 }
 
@@ -203,9 +238,43 @@
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.1),
+    rgba(255,255,255,0.1),
     transparent
   );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
+}
+
+.scan-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.scan-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--primary), transparent);
+  animation: scan 3s linear infinite;
+}
+
+@keyframes scan {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes gridMove {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(50px, 50px);
+  }
 }

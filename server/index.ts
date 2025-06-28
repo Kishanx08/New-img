@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { handleDemo } from "./routes/demo";
-import { uploadMiddleware, handleUpload } from "./routes/upload";
+import { uploadMiddleware, handleUpload, shortLinkRouter } from "./routes/upload";
 
 export function createServer() {
   const app = express();
@@ -17,13 +17,16 @@ export function createServer() {
 
   // API routes
   app.get("/api/ping", (_req, res) => {
-    res.json({ message: "Hello from KishanX02 API!" });
+    res.json({ message: "Hello from X02 API!" });
   });
 
   app.get("/api/demo", handleDemo);
 
   // Image upload endpoint
   app.post("/api/upload", uploadMiddleware, handleUpload);
+
+  // Short link redirect
+  app.use("/i", shortLinkRouter);
 
   return app;
 }

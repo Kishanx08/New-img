@@ -1,4 +1,4 @@
-import { RequestHandler } from "express";
+import { RequestHandler, Router } from "express";
 import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -9,6 +9,24 @@ import { UploadResponse, ErrorResponse } from "@shared/api";
 const uploadsDir = "uploads";
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const SHORTLINKS_FILE = path.join(uploadsDir, 'shortlinks.json');
+
+function loadShortLinks() {
+  if (!fs.existsSync(SHORTLINKS_FILE)) return {};
+  return JSON.parse(fs.readFileSync(SHORTLINKS_FILE, 'utf-8'));
+}
+function saveShortLinks(map) {
+  fs.writeFileSync(SHORTLINKS_FILE, JSON.stringify(map, null, 2));
+}
+function generateShortId(length = 6) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let id = '';
+  for (let i = 0; i < length; i++) {
+    id += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return id;
 }
 
 // Helper function to sanitize filename
@@ -53,7 +71,7 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 30 * 1024 * 1024, // 30MB limit
   },
   fileFilter: (_req, file, cb) => {
     // Only allow image files
@@ -76,16 +94,36 @@ export const handleUpload: RequestHandler = (req, res) => {
     return res.status(400).json(errorResponse);
   }
 
+  // Generate short link
+  let shortLinks = loadShortLinks();
+  let shortId;
+  do {
+    shortId = generateShortId();
+  } while (shortLinks[shortId]);
+  shortLinks[shortId] = req.file.filename;
+  saveShortLinks(shortLinks);
+
   // Use the full filename as ID (includes timestamp)
   const imageId = req.file.filename;
-  const response: UploadResponse = {
+  const response: UploadResponse & { shortUrl: string } = {
     success: true,
     imageId,
     url: `/api/images/${req.file.filename}`,
     originalName: req.file.originalname,
     size: req.file.size,
     uploadedAt: new Date().toISOString(),
+    shortUrl: `/i/${shortId}`,
   };
 
   res.json(response);
 };
+
+export const shortLinkRouter = Router();
+shortLinkRouter.get("/:shortId", (req, res) => {
+  const shortLinks = loadShortLinks();
+  const filename = shortLinks[req.params.shortId];
+  if (!filename) {
+    return res.status(404).send("Short link not found");
+  }
+  res.redirect(`/api/images/${filename}`);
+});
