@@ -13,9 +13,13 @@ import {
   Wifi,
   Shield,
   Activity,
+  Key,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { UploadResponse } from "@shared/api";
 import favicon from '/public/favicon.ico';
@@ -27,6 +31,7 @@ interface UploadedImage {
   originalName: string;
   size: number;
   uploadedAt: string;
+  apiKeyUsed?: boolean;
 }
 
 export default function Index() {
@@ -35,6 +40,8 @@ export default function Index() {
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [showGallery, setShowGallery] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editImage, setEditImage] = useState(null);
@@ -42,7 +49,19 @@ export default function Index() {
 
   useEffect(() => {
     setMounted(true);
+    // Set the hard-coded API key
+    const hardcodedApiKey = "ef4c5a28f912a27e40c332fab67b0e3246380ec1d97eae45053d5a2d2c4c597d";
+    setApiKey(hardcodedApiKey);
   }, []);
+
+  // Save API key to localStorage when it changes
+  useEffect(() => {
+    if (apiKey) {
+      localStorage.setItem("x02_api_key", apiKey);
+    } else {
+      localStorage.removeItem("x02_api_key");
+    }
+  }, [apiKey]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -77,12 +96,30 @@ export default function Index() {
     setUploading(true);
     const formData = new FormData();
     formData.append("image", file);
+    
+    // Add API key to form data if available
+    if (apiKey) {
+      formData.append("apiKey", apiKey);
+    }
 
     try {
+      const headers: Record<string, string> = {};
+      
+      // Add API key to headers if available
+      if (apiKey) {
+        headers["x-api-key"] = apiKey;
+      }
+
       const response = await fetch("/api/upload", {
         method: "POST",
+        headers,
         body: formData,
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Upload failed");
+      }
 
       const data: UploadResponse = await response.json();
 
@@ -93,13 +130,14 @@ export default function Index() {
           originalName: data.originalName,
           size: data.size,
           uploadedAt: data.uploadedAt,
+          apiKeyUsed: data.apiKeyUsed,
         };
 
         setUploadedImages((prev) => [newImage, ...prev]);
         setShowGallery(true);
         toast({
           title: "⚡ Upload successful!",
-          description: `${file.name} is now in the matrix`,
+          description: `${file.name} is now in the matrix${data.apiKeyUsed ? " (API key used)" : ""}`,
         });
       } else {
         throw new Error("Upload failed");
@@ -108,7 +146,7 @@ export default function Index() {
       console.error("Upload error:", error);
       toast({
         title: "Upload failed",
-        description: "Please try again",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       });
     } finally {
@@ -228,6 +266,18 @@ export default function Index() {
 
  
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowApiKeyDialog(true)}
+                className="gap-2 hover-lift cyber-card neon-border"
+              >
+                <Key className="h-4 w-4" />
+                <span className="font-mono">API KEY</span>
+                {apiKey && (
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                )}
+              </Button>
               <Button
                 variant="outline"
                 size="lg"
@@ -414,6 +464,9 @@ export default function Index() {
                           </h4>
                           <p className="text-sm text-muted-foreground font-mono">
                             {formatFileSize(image.size)} • {new Date(image.uploadedAt).toLocaleDateString()}
+                            {image.apiKeyUsed && (
+                              <span className="ml-2 text-green-500">• API Key Used</span>
+                            )}
                           </p>
                         </div>
                         <div className="flex gap-3">
@@ -475,6 +528,52 @@ export default function Index() {
             <Button onClick={() => { setEditModalOpen(false); handleFileUpload(editImage); }}>Upload</Button>
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* API Key Configuration Dialog */}
+      <Dialog open={showApiKeyDialog} onOpenChange={setShowApiKeyDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="h-5 w-5" />
+              API Key Configuration
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="apiKey" className="text-sm font-medium">
+                API Key
+              </Label>
+              <Input
+                id="apiKey"
+                type="password"
+                placeholder="Enter your API key"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Your API key is stored locally and used for authenticated requests.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className={`w-2 h-2 rounded-full ${apiKey ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+              <span>{apiKey ? 'API key configured' : 'No API key set'}</span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setApiKey("")}
+              disabled={!apiKey}
+            >
+              Clear
+            </Button>
+            <DialogClose asChild>
+              <Button>Save</Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>

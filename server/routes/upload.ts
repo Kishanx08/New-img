@@ -11,22 +11,25 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const SHORTLINKS_FILE = path.join(uploadsDir, 'shortlinks.json');
+const ANALYTICS_FILE = path.join(uploadsDir, 'analytics.json');
 
-function loadShortLinks() {
-  if (!fs.existsSync(SHORTLINKS_FILE)) return {};
-  return JSON.parse(fs.readFileSync(SHORTLINKS_FILE, 'utf-8'));
+function loadAnalytics() {
+  if (!fs.existsSync(ANALYTICS_FILE)) return { uploads: 0, apiKeyUsage: 0, totalSize: 0 };
+  return JSON.parse(fs.readFileSync(ANALYTICS_FILE, 'utf-8'));
 }
-function saveShortLinks(map) {
-  fs.writeFileSync(SHORTLINKS_FILE, JSON.stringify(map, null, 2));
+
+function saveAnalytics(analytics) {
+  fs.writeFileSync(ANALYTICS_FILE, JSON.stringify(analytics, null, 2));
 }
-function generateShortId(length = 6) {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let id = '';
-  for (let i = 0; i < length; i++) {
-    id += chars.charAt(Math.floor(Math.random() * chars.length));
+
+function updateAnalytics(apiKeyUsed: boolean, fileSize: number) {
+  const analytics = loadAnalytics();
+  analytics.uploads += 1;
+  analytics.totalSize += fileSize;
+  if (apiKeyUsed) {
+    analytics.apiKeyUsage += 1;
   }
-  return id;
+  saveAnalytics(analytics);
 }
 
 // Helper function to sanitize filename
@@ -94,36 +97,26 @@ export const handleUpload: RequestHandler = (req, res) => {
     return res.status(400).json(errorResponse);
   }
 
-  // Generate short link
-  let shortLinks = loadShortLinks();
-  let shortId;
-  do {
-    shortId = generateShortId();
-  } while (shortLinks[shortId]);
-  shortLinks[shortId] = req.file.filename;
-  saveShortLinks(shortLinks);
+  // Check if API key was used
+  const apiKeyUsed = !!(req.headers['x-api-key'] || 
+                        req.headers['authorization']?.replace('Bearer ', '') || 
+                        req.query.apiKey || 
+                        req.body?.apiKey);
+
+  // Update analytics
+  updateAnalytics(apiKeyUsed, req.file.size);
 
   // Use the full filename as ID (includes timestamp)
   const imageId = req.file.filename;
-  const response: UploadResponse & { shortUrl: string } = {
+  const response: UploadResponse & { apiKeyUsed: boolean } = {
     success: true,
     imageId,
     url: `/api/images/${req.file.filename}`,
     originalName: req.file.originalname,
     size: req.file.size,
     uploadedAt: new Date().toISOString(),
-    shortUrl: `/i/${shortId}`,
+    apiKeyUsed,
   };
 
   res.json(response);
 };
-
-export const shortLinkRouter = Router();
-shortLinkRouter.get("/:shortId", (req, res) => {
-  const shortLinks = loadShortLinks();
-  const filename = shortLinks[req.params.shortId];
-  if (!filename) {
-    return res.status(404).send("Short link not found");
-  }
-  res.redirect(`/api/images/${filename}`);
-});

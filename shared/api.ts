@@ -9,6 +9,7 @@ export interface UploadResponse {
   originalName: string;
   size: number;
   uploadedAt: string;
+  apiKeyUsed?: boolean;
 }
 
 export interface ImageMetadata {
@@ -24,4 +25,12 @@ export interface ImageMetadata {
 export interface ErrorResponse {
   success: false;
   error: string;
+  message?: string;
+}
+
+export interface AnalyticsResponse {
+  uploads: number;
+  apiKeyUsage: number;
+  totalSize: number;
+  apiKeyUsagePercentage: number;
 }
