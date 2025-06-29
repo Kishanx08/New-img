@@ -90,33 +90,12 @@ export const uploadMiddleware = upload.single("image");
 
 export const handleUpload: RequestHandler = (req, res) => {
   if (!req.file) {
-    const errorResponse: ErrorResponse = {
-      success: false,
-      error: "No image file provided",
-    };
-    return res.status(400).json(errorResponse);
+    return res.status(400).send("No image file provided");
   }
 
-  // Check if API key was used
-  const apiKeyUsed = !!(req.headers['x-api-key'] || 
-                        req.headers['authorization']?.replace('Bearer ', '') || 
-                        req.query.apiKey || 
-                        req.body?.apiKey);
+  const imageUrl = `https://x02.me/api/images/${req.file.filename}`;
+  // If you dont want the full URL:
+  // const imageUrl = `api/images/${req.file.filename}`;
 
-  // Update analytics
-  updateAnalytics(apiKeyUsed, req.file.size);
-
-  // Use the full filename as ID (includes timestamp)
-  const imageId = req.file.filename;
-  const response: UploadResponse & { apiKeyUsed: boolean } = {
-    success: true,
-    imageId,
-    url: `/api/images/${req.file.filename}`,
-    originalName: req.file.originalname,
-    size: req.file.size,
-    uploadedAt: new Date().toISOString(),
-    apiKeyUsed,
-  };
-
-  res.json(response);
+  res.type("text/plain").send(imageUrl);
 };
