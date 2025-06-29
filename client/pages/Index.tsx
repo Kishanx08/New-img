@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { UploadResponse } from "@shared/api";
-import favicon from '/public/favicon.ico';
+import favicon from '/favicon.ico';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 
 interface UploadedImage {
@@ -37,21 +37,28 @@ interface UploadedImage {
 export default function Index() {
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [showGallery, setShowGallery] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [apiKey, setApiKey] = useState("");
   const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editImage, setEditImage] = useState(null);
   const [editPreview, setEditPreview] = useState(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [darkMode, setDarkMode] = useState(true);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const toastTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setMounted(true);
     // Set the hard-coded API key
     const hardcodedApiKey = "ef4c5a28f912a27e40c332fab67b0e3246380ec1d97eae45053d5a2d2c4c597d";
     setApiKey(hardcodedApiKey);
+    return () => {
+      if (toastTimeout.current) clearTimeout(toastTimeout.current);
+    };
   }, []);
 
   // Save API key to localStorage when it changes
@@ -62,6 +69,12 @@ export default function Index() {
       localStorage.removeItem("x02_api_key");
     }
   }, [apiKey]);
+
+  const showToast = (message: string, type: 'success' | 'error') => {
+    setToast({ message, type });
+    if (toastTimeout.current) clearTimeout(toastTimeout.current);
+    toastTimeout.current = setTimeout(() => setToast(null), 2500);
+  };
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -85,15 +98,12 @@ export default function Index() {
 
   const handleFileUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload an image file",
-        variant: "destructive",
-      });
+      showToast("Please upload an image file", "error");
       return;
     }
 
     setUploading(true);
+    setUploadProgress(0);
     const formData = new FormData();
     formData.append("image", file);
     
@@ -110,47 +120,49 @@ export default function Index() {
         headers["x-api-key"] = apiKey;
       }
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        headers,
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Upload failed");
-      }
-
-      const data: UploadResponse = await response.json();
-
-      if (data.success) {
-        const newImage: UploadedImage = {
-          id: data.imageId,
-          url: data.url,
-          originalName: data.originalName,
-          size: data.size,
-          uploadedAt: data.uploadedAt,
-          apiKeyUsed: data.apiKeyUsed,
+      // Use XMLHttpRequest for progress
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/upload");
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            setUploadProgress(Math.round((event.loaded / event.total) * 100));
+          }
         };
-
-        setUploadedImages((prev) => [newImage, ...prev]);
-        setShowGallery(true);
-        toast({
-          title: "⚡ Upload successful!",
-          description: `${file.name} is now in the matrix${data.apiKeyUsed ? " (API key used)" : ""}`,
-        });
-      } else {
-        throw new Error("Upload failed");
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive",
+        xhr.onload = () => {
+          setUploadProgress(null);
+          setUploading(false);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const url = xhr.responseText;
+            const newImage: UploadedImage = {
+              id: file.name,
+              url,
+              originalName: file.name,
+              size: file.size,
+              uploadedAt: new Date().toISOString(),
+              apiKeyUsed: apiKey ? true : undefined,
+            };
+            setUploadedImages((prev) => [newImage, ...prev]);
+            setShowGallery(true);
+            showToast("⚡ Upload successful!", "success");
+            resolve();
+          } else {
+            showToast(xhr.responseText || "Upload failed", "error");
+            reject(new Error(xhr.responseText || "Upload failed"));
+          }
+        };
+        xhr.onerror = () => {
+          setUploadProgress(null);
+          setUploading(false);
+          showToast("Upload failed", "error");
+          reject(new Error("Upload failed"));
+        };
+        xhr.send(formData);
       });
-    } finally {
+    } catch (error) {
+      setUploadProgress(null);
       setUploading(false);
+      showToast(error instanceof Error ? error.message : "Please try again", "error");
     }
   };
 
@@ -173,10 +185,7 @@ export default function Index() {
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(fullUrl);
-        toast({
-          title: "⚡ Link copied!",
-          description: "Ready to share in the digital realm",
-        });
+        showToast("⚡ Link copied!", "success");
         return;
       }
 
@@ -193,20 +202,13 @@ export default function Index() {
       document.body.removeChild(textArea);
 
       if (successful) {
-        toast({
-          title: "⚡ Link copied!",
-          description: "Ready to share in the digital realm",
-        });
+        showToast("⚡ Link copied!", "success");
       } else {
-        throw new Error("Copy command failed");
+        showToast("Copy command failed", "error");
       }
     } catch (error) {
       console.error("Copy failed:", error);
-      toast({
-        title: "Copy manually",
-        description: fullUrl,
-        duration: 10000,
-      });
+      showToast("Copy manually", "error");
     }
   };
 
@@ -218,296 +220,120 @@ export default function Index() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  const theme = darkMode
+    ? {
+        bg: "bg-black",
+        card: "bg-black/60 border-green-800/40 text-white",
+        glass: "bg-black/70 border-green-700/40 text-green-300",
+        input: "bg-black/80 text-white border-green-800/40",
+        text: "text-white",
+        accent: "text-green-300 border-green-400",
+        subtext: "text-green-200/70",
+        button: "bg-green-700 hover:bg-green-600 text-white",
+        buttonOutline: "border-green-700 text-green-300 hover:bg-green-900/30",
+      }
+    : {
+        bg: "bg-white",
+        card: "bg-white/80 border-green-300/40 text-black",
+        glass: "bg-white/90 border-green-300/40 text-green-700",
+        input: "bg-white text-black border-green-300/40",
+        text: "text-black",
+        accent: "text-green-700 border-green-500",
+        subtext: "text-green-700/70",
+        button: "bg-green-600 hover:bg-green-500 text-white",
+        buttonOutline: "border-green-600 text-green-700 hover:bg-green-100/30",
+      };
+
   if (!mounted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="gradient-neon w-16 h-16 rounded-full animate-pulse-slow"></div>
-      </div>
-    );
+    return <div className={`min-h-screen flex items-center justify-center ${theme.bg} ${theme.text}`} style={{ fontFamily: 'Inter, Poppins, Montserrat, sans-serif' }}>Loading...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
-      {/* Cyberpunk Grid Background */}
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `
-            linear-gradient(rgba(255, 255, 255, 0.21) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 255, 255, 0.21) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px',
-          animation: 'gridMove 20s linear infinite'
-        }}></div>
-      </div>
-
-      {/* Floating Neon Orbs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-20 w-32 h-32 gradient-primary rounded-full blur-2xl animate-float opacity-30"></div>
-        <div className="absolute bottom-20 right-20 w-40 h-40 gradient-secondary rounded-full blur-3xl animate-float opacity-25" style={{ animationDelay: "2s" }}></div>
-        <div className="absolute top-1/2 left-1/3 w-24 h-24 gradient-accent rounded-full blur-xl animate-float opacity-20" style={{ animationDelay: "4s" }}></div>
-        <div className="absolute bottom-1/3 right-1/3 w-20 h-20 gradient-neon rounded-full blur-lg animate-float opacity-35" style={{ animationDelay: "1s" }}></div>
-      </div>
-
-      {/* Header */}
-      <header className="glass-effect sticky top-0 z-50 animate-slide-up scan-line">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-white/10 rounded-2xl animate-glow">
-                <img src={favicon} alt="logo" className="w-10 h-10 rounded-lg" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-black text-white">X02</h1>
-                <p className="text-xs text-muted-foreground font-mono"></p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-
- 
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowApiKeyDialog(true)}
-                className="gap-2 hover-lift cyber-card neon-border"
-              >
-                <Key className="h-4 w-4" />
-                <span className="font-mono">API KEY</span>
-                {apiKey && (
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setShowGallery(!showGallery)}
-                className="gap-2 hover-lift cyber-card neon-border"
-              >
-                <Grid3X3 className="h-5 w-5" />
-                <span className="font-mono">GALLERY</span>
-                {uploadedImages.length > 0 && (
-                  <span className="bg-primary text-primary-foreground px-2 py-1 rounded-full text-xs font-mono">
-                    {uploadedImages.length}
-                  </span>
-                )}
-              </Button>
-            </div>
+    <div className={`min-h-screen relative overflow-hidden ${theme.bg} ${theme.text}`} style={{ fontFamily: 'Inter, Poppins, Montserrat, sans-serif' }}>
+      {/* Toast/response message */}
+      {toast && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className={`px-8 py-4 rounded-xl shadow-lg border ${theme.glass} backdrop-blur-lg text-center text-lg font-medium pointer-events-auto`} style={{ minWidth: 260, border: '1.5px solid #fff2', boxShadow: '0 2px 24px #00ff8033' }}>
+            {toast.message}
           </div>
+        </div>
+      )}
+      <header className={`w-full border-b ${theme.card} backdrop-blur-md py-4 mb-8 relative z-10`}>
+        <div className="max-w-2xl mx-auto flex items-center gap-4 px-4">
+          <img src={favicon} alt="logo" className="w-10 h-10 rounded-lg" />
+          <div className="flex-1">
+            <h1 className={`text-2xl font-bold tracking-tight inline-block border-b-2 ${theme.accent} pb-1`}>X02 Image Uploader</h1>
+          </div>
+          <Button size="sm" className="ml-4 border border-green-400/40 bg-transparent text-green-300 hover:bg-green-900/20" onClick={() => setDarkMode((d) => !d)}>
+            {darkMode ? 'Light Mode' : 'Dark Mode'}
+          </Button>
         </div>
       </header>
-
-      <div className="container mx-auto px-6 py-16 relative z-10">
-        {/* Hero Section */}
-        <div className="max-w-6xl mx-auto text-center mb-20 animate-fade-in">
-          <div className="mb-8">
-            <div className="inline-flex items-center gap-4 px-6 py-3 bg-card/50 backdrop-blur-sm rounded-full border border-primary/20 mb-6">
-              <Shield className="h-5 w-5 text-primary" />
-              <span className="text-sm font-mono text-primary">SECURE UPLOAD SYSTEM</span>
-            </div>
-          </div>
-          <h2 className="text-8xl font-black text-neon mb-6 leading-none">
-            DIGITAL
-            <br />
-            <span className="text-gradient">VAULT</span>
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-mono">
-            Upload. Secure. Share. Your images are protected in our cyber fortress.
-          </p>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-14">
-          <Card className="cyber-card p-5 text-center max-w-sm mx-auto rounded-xl">
-            <div className="w-10 h-10 mx-auto mb-3 gradient-primary rounded-xl flex items-center justify-center">
-              <Activity className="h-6 w-6 text-white" />
-            </div>
-            <h3 className="text-base font-bold text-primary mb-1">LIGHTNING FAST</h3>
-            <p className="text-sm text-muted-foreground font-mono">Instant uploads</p>
-          </Card>
-          <Card className="cyber-card p-5 text-center max-w-sm mx-auto rounded-xl">
-            <div className="w-10 h-10 mx-auto mb-3 gradient-secondary rounded-xl flex items-center justify-center">
-              <Shield className="h-6 w-6 text-white" />
-            </div>
-            <h3 className="text-base font-bold text-accent mb-1">SECURE</h3>
-            <p className="text-sm text-muted-foreground font-mono">Military-grade encryption</p>
-          </Card>
-          <Card className="cyber-card p-5 text-center max-w-sm mx-auto rounded-xl">
-            <div className="w-10 h-10 mx-auto mb-3 gradient-accent rounded-xl flex items-center justify-center">
-              <Wifi className="h-6 w-6 text-white" />
-            </div>
-            <h3 className="text-base font-bold text-accent mb-1">GLOBAL</h3>
-            <p className="text-sm text-muted-foreground font-mono">Worldwide access</p>
-          </Card>
-        </div>
-
-        {/* Upload Area */}
-        <Card className="max-w-xl mx-auto mb-16 cyber-card animate-slide-up rounded-2xl">
-          <div className="p-8">
-            <div
-              className={`upload-zone rounded-2xl p-8 text-center cursor-pointer relative overflow-hidden ${
-                dragActive ? "border-white bg-white/10 scale-105" : ""
-              }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileSelect}
-                disabled={uploading}
-              />
-
-              {uploading ? (
-                <div className="space-y-8">
-                  <div className="w-32 h-32 mx-auto rounded-full gradient-neon flex items-center justify-center shimmer animate-glow">
-                    <Upload className="h-16 w-16 text-white animate-pulse" />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold text-foreground font-mono">
-                      ⚡ UPLOADING TO MATRIX...
-                    </p>
-                    <p className="text-lg text-muted-foreground font-mono">
-                      Processing your digital asset
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-8">
-                  <div className="w-32 h-32 mx-auto rounded-full bg-gradient-to-r from-primary/20 to-accent/20 flex items-center justify-center animate-float border border-primary/30">
-                    <Upload className="h-16 w-16 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-4xl font-bold text-foreground mb-3 font-mono">
-                      DROP FILES HERE
-                    </p>
-                    <p className="text-xl text-muted-foreground font-mono">
-                      or click to access your device
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-5 justify-center text-muted-foreground font-mono text-base">
-                    <div className="flex items-center gap-2">
-                      <FileImage className="h-5 w-5" />
-                      <span>JPG, PNG, GIF</span>
-                    </div>
-                    <div className="w-px h-4 bg-border"></div>
-                    <span>MAX 30MB</span>
-                  </div>
-                </div>
-              )}
-
-              {dragActive && (
-                <div className="absolute inset-0 bg-primary/10 backdrop-blur-sm rounded-3xl flex items-center justify-center">
-                  <div className="text-center">
-                    <Zap className="h-20 w-20 text-primary mx-auto mb-4 animate-pulse" />
-                    <p className="text-3xl font-bold text-primary font-mono">
-                      DROP IT! ⚡
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-
-        {/* Gallery */}
-        {showGallery && (
-          <div className="max-w-7xl mx-auto animate-slide-up">
-            {uploadedImages.length > 0 ? (
+      <main className="max-w-2xl mx-auto px-4 relative z-10">
+        <section className="mb-8">
+          <div
+            className={`rounded-xl border ${theme.card} backdrop-blur-lg p-8 text-center transition-colors ${dragActive ? "ring-2 ring-green-400" : ""}`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            style={{ cursor: uploading ? 'not-allowed' : 'pointer', border: '1.5px solid #fff2', boxShadow: '0 2px 24px #00ff8033' }}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={handleFileSelect}
+              disabled={uploading}
+            />
+            {uploading ? (
               <>
-                <div className="flex items-center justify-between mb-12">
-                  <div className="flex items-center gap-4">
-                    <Eye className="h-8 w-8 text-accent" />
-                    <h3 className="text-5xl font-black text-neon font-mono">
-                      DIGITAL VAULT
-                    </h3>
+                <div className="text-green-300 font-semibold mb-2">Uploading...</div>
+                {uploadProgress !== null ? (
+                  <div className="w-full h-3 bg-green-900/30 rounded-full overflow-hidden">
+                    <div className="h-3 bg-green-400 transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
                   </div>
-                  <div className="flex items-center gap-3 px-6 py-3 rounded-full bg-primary/20 border border-primary/30">
-                    <Sparkles className="h-5 w-5 text-primary" />
-                    <span className="text-primary font-mono font-bold">
-                      {uploadedImages.length} FILES
-                    </span>
+                ) : (
+                  <div className="flex justify-center items-center h-3">
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full" />
                   </div>
-                </div>
-                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {uploadedImages.map((image, index) => (
-                    <Card
-                      key={image.id}
-                      className="overflow-hidden group cyber-card animate-slide-up"
-                      style={{ animationDelay: `${index * 0.1}s` }}
-                    >
-                      <div className="aspect-square bg-muted relative overflow-hidden">
-                        <img
-                          src={image.url}
-                          alt={image.originalName}
-                          className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                          <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center">
-                            <Image className="h-4 w-4 text-white" />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-6 space-y-4">
-                        <div>
-                          <h4
-                            className="font-bold truncate text-foreground text-lg font-mono"
-                            title={image.originalName}
-                          >
-                            {image.originalName}
-                          </h4>
-                          <p className="text-sm text-muted-foreground font-mono">
-                            {formatFileSize(image.size)} • {new Date(image.uploadedAt).toLocaleDateString()}
-                            {image.apiKeyUsed && (
-                              <span className="ml-2 text-green-500">• API Key Used</span>
-                            )}
-                          </p>
-                        </div>
-                        <div className="flex gap-3">
-                          <Button
-                            size="sm"
-                            className="flex-1 gradient-primary hover:scale-105 transition-transform font-mono"
-                            onClick={() => copyToClipboard(image.url)}
-                          >
-                            <Copy className="h-4 w-4 mr-2" />
-                            COPY
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="hover:scale-105 transition-transform cyber-card font-mono"
-                            onClick={() => window.open(image.url, "_blank")}
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
+                )}
               </>
             ) : (
-              <div className="text-center py-20">
-                <div className="w-24 h-24 mx-auto mb-8 rounded-full gradient-neon flex items-center justify-center animate-pulse-slow">
-                  <Grid3X3 className="h-12 w-12 text-white" />
-                </div>
-                <h3 className="text-3xl font-bold mb-4 text-foreground font-mono">
-                  VAULT EMPTY
-                </h3>
-                <p className="text-xl text-muted-foreground font-mono">
-                  Upload your first file to initialize the digital vault ⚡
-                </p>
-              </div>
+              <>
+                <div className="text-lg font-medium mb-2">Drag & drop or click to upload an image</div>
+                <div className="text-green-300 text-sm">JPG, PNG, GIF, etc. (max 30MB)</div>
+              </>
             )}
           </div>
-        )}
-      </div>
+        </section>
+        <section>
+          <h2 className="text-lg font-semibold mb-4">Uploaded Images</h2>
+          {uploadedImages.length === 0 ? (
+            <div className={`${theme.subtext} text-base`}>No images uploaded yet.</div>
+          ) : (
+            <div className="grid gap-4">
+              {uploadedImages.map((image, idx) => (
+                <div key={idx} className={`flex items-center gap-4 ${theme.card} rounded-lg p-3 backdrop-blur-lg transition-all duration-200 hover:shadow-green-700/20`} style={{ border: '1.5px solid #fff2', boxShadow: '0 2px 24px #00ff8033' }}>
+                  <img src={image.url} alt={image.originalName} className="w-16 h-16 object-cover rounded border border-green-900/40" />
+                  <div className="flex-1">
+                    <div className="font-medium">{image.originalName}</div>
+                    <div className="text-green-300 text-xs">{formatFileSize(image.size)} • {new Date(image.uploadedAt).toLocaleDateString()}</div>
+                    <div className="text-green-400 text-xs break-all">{image.url}</div>
+                  </div>
+                  <Button size="sm" className={`${theme.button} mr-2 shadow-none hover:shadow-green-400/30 transition-shadow`} onClick={() => copyToClipboard(image.url)}>Copy Link</Button>
+                  <Button size="sm" variant="outline" className={`${theme.buttonOutline} hover:shadow-green-400/20 transition-shadow`} onClick={() => window.open(image.url, "_blank")}>Open</Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </main>
+      <footer className={`text-center ${theme.subtext} text-sm mt-12 mb-4 relative z-10`}>
+        &copy; {new Date().getFullYear()} X02 Image Uploader
+      </footer>
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
