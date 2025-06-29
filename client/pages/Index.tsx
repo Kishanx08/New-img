@@ -181,35 +181,13 @@ export default function Index() {
   };
 
   const copyToClipboard = async (url: string) => {
-    const fullUrl = `${window.location.origin}${url}`;
-
+    // If url starts with http, use as is. Otherwise, prepend window.location.origin
+    const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
     try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(fullUrl);
-        showToast("⚡ Link copied!", "success");
-        return;
-      }
-
-      const textArea = document.createElement("textarea");
-      textArea.value = fullUrl;
-      textArea.style.position = "fixed";
-      textArea.style.left = "-999999px";
-      textArea.style.top = "-999999px";
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
-
-      const successful = document.execCommand("copy");
-      document.body.removeChild(textArea);
-
-      if (successful) {
-        showToast("⚡ Link copied!", "success");
-      } else {
-        showToast("Copy command failed", "error");
-      }
+      await navigator.clipboard.writeText(fullUrl);
+      showToast("Link copied!", "success");
     } catch (error) {
-      console.error("Copy failed:", error);
-      showToast("Copy manually", "error");
+      showToast("Copy failed", "error");
     }
   };
 
