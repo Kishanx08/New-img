@@ -22,8 +22,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { UploadResponse } from "@shared/api";
-import favicon from '/favicon.ico';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import favicon from "/favicon.ico";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 interface UploadedImage {
   id: string;
@@ -46,7 +53,10 @@ export default function Index() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editImage, setEditImage] = useState(null);
   const [editPreview, setEditPreview] = useState(null);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
   const [darkMode, setDarkMode] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -54,7 +64,8 @@ export default function Index() {
   useEffect(() => {
     setMounted(true);
     // Set the hard-coded API key
-    const hardcodedApiKey = "ef4c5a28f912a27e40c332fab67b0e3246380ec1d97eae45053d5a2d2c4c597d";
+    const hardcodedApiKey =
+      "ef4c5a28f912a27e40c332fab67b0e3246380ec1d97eae45053d5a2d2c4c597d";
     setApiKey(hardcodedApiKey);
     return () => {
       if (toastTimeout.current) clearTimeout(toastTimeout.current);
@@ -70,7 +81,7 @@ export default function Index() {
     }
   }, [apiKey]);
 
-  const showToast = (message: string, type: 'success' | 'error') => {
+  const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
     if (toastTimeout.current) clearTimeout(toastTimeout.current);
     toastTimeout.current = setTimeout(() => setToast(null), 2500);
@@ -106,7 +117,7 @@ export default function Index() {
     setUploadProgress(0);
     const formData = new FormData();
     formData.append("image", file);
-    
+
     // Add API key to form data if available
     if (apiKey) {
       formData.append("apiKey", apiKey);
@@ -114,7 +125,7 @@ export default function Index() {
 
     try {
       const headers: Record<string, string> = {};
-      
+
       // Add API key to headers if available
       if (apiKey) {
         headers["x-api-key"] = apiKey;
@@ -124,7 +135,10 @@ export default function Index() {
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("POST", "/api/upload");
-        xhr.setRequestHeader("x-api-key", "ef4c5a28f912a27e40c332fab67b0e3246380ec1d97eae45053d5a2d2c4c597d");
+        xhr.setRequestHeader(
+          "x-api-key",
+          "ef4c5a28f912a27e40c332fab67b0e3246380ec1d97eae45053d5a2d2c4c597d",
+        );
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
             setUploadProgress(Math.round((event.loaded / event.total) * 100));
@@ -163,7 +177,10 @@ export default function Index() {
     } catch (error) {
       setUploadProgress(null);
       setUploading(false);
-      showToast(error instanceof Error ? error.message : "Please try again", "error");
+      showToast(
+        error instanceof Error ? error.message : "Please try again",
+        "error",
+      );
     }
   };
 
@@ -182,7 +199,9 @@ export default function Index() {
 
   const copyToClipboard = async (url: string) => {
     // If url starts with http, use as is. Otherwise, prepend window.location.origin
-    const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+    const fullUrl = url.startsWith("http")
+      ? url
+      : `${window.location.origin}${url}`;
     try {
       await navigator.clipboard.writeText(fullUrl);
       showToast("Link copied!", "success");
@@ -224,28 +243,79 @@ export default function Index() {
       };
 
   if (!mounted) {
-    return <div className={`min-h-screen flex items-center justify-center ${theme.bg} ${theme.text}`} style={{ fontFamily: 'Inter, Poppins, Montserrat, sans-serif' }}>Loading...</div>;
+    return (
+      <div
+        className={`min-h-screen flex items-center justify-center ${theme.bg} ${theme.text}`}
+        style={{ fontFamily: "Inter, Poppins, Montserrat, sans-serif" }}
+      >
+        Loading...
+      </div>
+    );
   }
 
   return (
-    <div className={`min-h-screen relative overflow-hidden ${theme.bg} ${theme.text}`} style={{ fontFamily: 'Inter, Poppins, Montserrat, sans-serif' }}>
+    <div
+      className={`min-h-screen relative overflow-hidden ${theme.bg} ${theme.text}`}
+      style={{ fontFamily: "Inter, Poppins, Montserrat, sans-serif" }}
+    >
       {/* Toast/response message */}
       {toast && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-          <div className={`px-8 py-4 rounded-xl shadow-lg border ${theme.glass} backdrop-blur-lg text-center text-lg font-medium pointer-events-auto`} style={{ minWidth: 260, border: '1.5px solid #fff2', boxShadow: '0 2px 24px #00ff8033' }}>
+          <div
+            className={`px-8 py-4 rounded-xl shadow-lg border ${theme.glass} backdrop-blur-lg text-center text-lg font-medium pointer-events-auto`}
+            style={{
+              minWidth: 260,
+              border: "1.5px solid #fff2",
+              boxShadow: "0 2px 24px #00ff8033",
+            }}
+          >
             {toast.message}
           </div>
         </div>
       )}
-      <header className={`w-full border-b ${theme.card} backdrop-blur-md py-4 mb-8 relative z-10`}>
+      <header
+        className={`w-full border-b ${theme.card} backdrop-blur-md py-4 mb-8 relative z-10`}
+      >
         <div className="max-w-2xl mx-auto flex items-center gap-4 px-4">
           <img src={favicon} alt="logo" className="w-10 h-10 rounded-lg" />
           <div className="flex-1">
-            <h1 className={`text-2xl font-bold tracking-tight inline-block border-b-2 ${theme.accent} pb-1`}>X02 Image Uploader</h1>
+            <h1
+              className={`text-2xl font-bold tracking-tight inline-block border-b-2 ${theme.accent} pb-1`}
+            >
+              X02 Image Uploader
+            </h1>
           </div>
-          <Button size="sm" className="ml-4 border border-green-400/40 bg-transparent text-green-300 hover:bg-green-900/20" onClick={() => setDarkMode((d) => !d)}>
-            {darkMode ? 'Light Mode' : 'Dark Mode'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => (window.location.href = "/getkey")}
+              className="border border-green-400/40 bg-transparent text-green-300 hover:bg-green-900/20"
+            >
+              <Key className="h-4 w-4 mr-1" />
+              Get API Key
+            </Button>
+            {localStorage.getItem("x02_api_key") && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() =>
+                  (window.location.href = `/dashboard?key=${localStorage.getItem("x02_api_key")}`)
+                }
+                className="border border-green-400/40 bg-transparent text-green-300 hover:bg-green-900/20"
+              >
+                <Settings className="h-4 w-4 mr-1" />
+                Dashboard
+              </Button>
+            )}
+            <Button
+              size="sm"
+              className="border border-green-400/40 bg-transparent text-green-300 hover:bg-green-900/20"
+              onClick={() => setDarkMode((d) => !d)}
+            >
+              {darkMode ? "Light Mode" : "Dark Mode"}
+            </Button>
+          </div>
         </div>
       </header>
       <main className="max-w-2xl mx-auto px-4 relative z-10">
@@ -257,7 +327,11 @@ export default function Index() {
             onDragOver={handleDrag}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            style={{ cursor: uploading ? 'not-allowed' : 'pointer', border: '1.5px solid #fff2', boxShadow: '0 2px 24px #00ff8033' }}
+            style={{
+              cursor: uploading ? "not-allowed" : "pointer",
+              border: "1.5px solid #fff2",
+              boxShadow: "0 2px 24px #00ff8033",
+            }}
           >
             <input
               ref={fileInputRef}
@@ -269,10 +343,15 @@ export default function Index() {
             />
             {uploading ? (
               <>
-                <div className="text-green-300 font-semibold mb-2">Uploading...</div>
+                <div className="text-green-300 font-semibold mb-2">
+                  Uploading...
+                </div>
                 {uploadProgress !== null ? (
                   <div className="w-full h-3 bg-green-900/30 rounded-full overflow-hidden">
-                    <div className="h-3 bg-green-400 transition-all duration-200" style={{ width: `${uploadProgress}%` }} />
+                    <div
+                      className="h-3 bg-green-400 transition-all duration-200"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
                   </div>
                 ) : (
                   <div className="flex justify-center items-center h-3">
@@ -282,8 +361,12 @@ export default function Index() {
               </>
             ) : (
               <>
-                <div className="text-lg font-medium mb-2">Drag & drop or click to upload an image</div>
-                <div className="text-green-300 text-sm">JPG, PNG, GIF, etc. (max 30MB)</div>
+                <div className="text-lg font-medium mb-2">
+                  Drag & drop or click to upload an image
+                </div>
+                <div className="text-green-300 text-sm">
+                  JPG, PNG, GIF, etc. (max 30MB)
+                </div>
               </>
             )}
           </div>
@@ -291,26 +374,59 @@ export default function Index() {
         <section>
           <h2 className="text-lg font-semibold mb-4">Uploaded Images</h2>
           {uploadedImages.length === 0 ? (
-            <div className={`${theme.subtext} text-base`}>No images uploaded yet.</div>
+            <div className={`${theme.subtext} text-base`}>
+              No images uploaded yet.
+            </div>
           ) : (
             <div className="grid gap-4">
               {uploadedImages.map((image, idx) => (
-                <div key={idx} className={`flex items-center gap-4 ${theme.card} rounded-lg p-3 backdrop-blur-lg transition-all duration-200 hover:shadow-green-700/20`} style={{ border: '1.5px solid #fff2', boxShadow: '0 2px 24px #00ff8033' }}>
-                  <img src={image.url} alt={image.originalName} className="w-16 h-16 object-cover rounded border border-green-900/40" />
+                <div
+                  key={idx}
+                  className={`flex items-center gap-4 ${theme.card} rounded-lg p-3 backdrop-blur-lg transition-all duration-200 hover:shadow-green-700/20`}
+                  style={{
+                    border: "1.5px solid #fff2",
+                    boxShadow: "0 2px 24px #00ff8033",
+                  }}
+                >
+                  <img
+                    src={image.url}
+                    alt={image.originalName}
+                    className="w-16 h-16 object-cover rounded border border-green-900/40"
+                  />
                   <div className="flex-1">
                     <div className="font-medium">{image.originalName}</div>
-                    <div className="text-green-300 text-xs">{formatFileSize(image.size)} • {new Date(image.uploadedAt).toLocaleDateString()}</div>
-                    <div className="text-green-400 text-xs break-all">{image.url}</div>
+                    <div className="text-green-300 text-xs">
+                      {formatFileSize(image.size)} •{" "}
+                      {new Date(image.uploadedAt).toLocaleDateString()}
+                    </div>
+                    <div className="text-green-400 text-xs break-all">
+                      {image.url}
+                    </div>
                   </div>
-                  <Button size="sm" className={`${theme.button} mr-2 shadow-none hover:shadow-green-400/30 transition-shadow`} onClick={() => copyToClipboard(image.url)}>Copy Link</Button>
-                  <Button size="sm" variant="outline" className={`${theme.buttonOutline} hover:shadow-green-400/20 transition-shadow`} onClick={() => window.open(image.url, "_blank")}>Open</Button>
+                  <Button
+                    size="sm"
+                    className={`${theme.button} mr-2 shadow-none hover:shadow-green-400/30 transition-shadow`}
+                    onClick={() => copyToClipboard(image.url)}
+                  >
+                    Copy Link
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={`${theme.buttonOutline} hover:shadow-green-400/20 transition-shadow`}
+                    onClick={() => window.open(image.url, "_blank")}
+                  >
+                    Open
+                  </Button>
                 </div>
               ))}
             </div>
           )}
         </section>
       </main>
-      <footer className={`text-center ${theme.subtext} text-sm mt-12 mb-4 relative z-10`}>
+      <footer
+        className={`text-center ${theme.subtext} text-sm mt-12 mb-4 relative z-10`}
+      >
         &copy; {new Date().getFullYear()} X02 Image Uploader
       </footer>
       <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
@@ -330,7 +446,14 @@ export default function Index() {
             </div>
           )}
           <DialogFooter>
-            <Button onClick={() => { setEditModalOpen(false); handleFileUpload(editImage); }}>Upload</Button>
+            <Button
+              onClick={() => {
+                setEditModalOpen(false);
+                handleFileUpload(editImage);
+              }}
+            >
+              Upload
+            </Button>
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
@@ -361,12 +484,15 @@ export default function Index() {
                 className="mt-1"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Your API key is stored locally and used for authenticated requests.
+                Your API key is stored locally and used for authenticated
+                requests.
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <div className={`w-2 h-2 rounded-full ${apiKey ? 'bg-green-500' : 'bg-gray-400'}`}></div>
-              <span>{apiKey ? 'API key configured' : 'No API key set'}</span>
+              <div
+                className={`w-2 h-2 rounded-full ${apiKey ? "bg-green-500" : "bg-gray-400"}`}
+              ></div>
+              <span>{apiKey ? "API key configured" : "No API key set"}</span>
             </div>
           </div>
           <DialogFooter>

@@ -3,7 +3,8 @@ import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
-import { UploadResponse, ErrorResponse } from "@shared/api";
+import { UploadResponse, ErrorResponse, UserImage } from "@shared/api";
+import { updateApiKeyUsage, addImageToDatabase } from "../lib/apikeys";
 
 // Simple uploads directory in project root
 const uploadsDir = "uploads";
@@ -11,11 +12,12 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const ANALYTICS_FILE = path.join(uploadsDir, 'analytics.json');
+const ANALYTICS_FILE = path.join(uploadsDir, "analytics.json");
 
 function loadAnalytics() {
-  if (!fs.existsSync(ANALYTICS_FILE)) return { uploads: 0, apiKeyUsage: 0, totalSize: 0 };
-  return JSON.parse(fs.readFileSync(ANALYTICS_FILE, 'utf-8'));
+  if (!fs.existsSync(ANALYTICS_FILE))
+    return { uploads: 0, apiKeyUsage: 0, totalSize: 0 };
+  return JSON.parse(fs.readFileSync(ANALYTICS_FILE, "utf-8"));
 }
 
 function saveAnalytics(analytics) {
@@ -94,8 +96,38 @@ export const handleUpload: RequestHandler = (req, res) => {
   }
 
   const imageUrl = `https://x02.me/api/images/${req.file.filename}`;
-  // If you dont want the full URL:
-  // const imageUrl = `api/images/${req.file.filename}`;
+  const imageId = uuidv4();
+
+  // Get API key info
+  const apiKeyFromHeader = req.headers["x-api-key"] as string;
+  const apiKeyData = (req as any).apiKeyData;
+
+  // Track upload in analytics
+  updateAnalytics(!!apiKeyData, req.file.size);
+
+  // If this is a user API key (not hardcoded), track usage and save image metadata
+  if (
+    apiKeyData &&
+    apiKeyFromHeader !==
+      "ef4c5a28f912a27e40c332fab67b0e3246380ec1d97eae45053d5a2d2c4c597d"
+  ) {
+    // Update API key usage
+    updateApiKeyUsage(apiKeyFromHeader);
+
+    // Save image to database
+    const imageData: UserImage & { apiKey: string } = {
+      id: imageId,
+      filename: req.file.filename,
+      originalName: req.file.originalname,
+      url: imageUrl,
+      size: req.file.size,
+      uploadedAt: new Date().toISOString(),
+      views: 0,
+      apiKey: apiKeyFromHeader,
+    };
+
+    addImageToDatabase(imageData);
+  }
 
   res.type("text/plain").send(imageUrl);
 };
