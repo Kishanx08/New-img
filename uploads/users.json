@@ -1,0 +1,34 @@
+[
+  {
+    "id": "b9645844-befa-43cd-8ebe-c2f42326137f",
+    "username": "Root",
+    "passwordHash": "$2b$12$JoMF.EXgG3/z6x0MxET5L.q6pe/fBuRfC5.ThhDS9Bt19grSh3D2e",
+    "apiKey": "ad0a265df1384899923e529909c50d49",
+    "createdAt": "2025-07-01T08:31:13.456Z",
+    "createdIp": "::ffff:127.0.0.1",
+    "limits": {
+      "dailyLimit": 100,
+      "hourlyLimit": 25
+    },
+    "usage": {
+      "count": 0
+    },
+    "uploadsFolder": "uploads\\users\\Root"
+  },
+  {
+    "id": "7f492a6f-6853-4bd3-b89f-1a7716fb4583",
+    "username": "Kishan",
+    "passwordHash": "$2b$12$OTtj9zzZPp.zoVdoj6BMmeOwsxXNmZn/ZzTE.ZX.ijBPrqjQ4OIOa",
+    "apiKey": "f0e8a5eabfb94abc8fe18efe46e40abf",
+    "createdAt": "2025-07-01T08:36:53.394Z",
+    "createdIp": "::1",
+    "limits": {
+      "dailyLimit": 100,
+      "hourlyLimit": 25
+    },
+    "usage": {
+      "count": 0
+    },
+    "uploadsFolder": "uploads\\users\\Kishan"
+  }
+]
