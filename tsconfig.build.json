@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": false,
     "outDir": "dist",
-    "module": "CommonJS", // Needed for Node.js
+    "module": "CommonJS",
     "moduleResolution": "node",
     "target": "ES2020"
   },
