@@ -34,9 +34,3 @@ export interface AnalyticsResponse {
   totalSize: number;
   apiKeyUsagePercentage: number;
 }
-
-export interface DeleteImageResponse {
-  success: boolean;
-  message?: string;
-  error?: string;
-}

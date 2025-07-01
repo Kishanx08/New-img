@@ -3,11 +3,7 @@ import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
-import {
-  UploadResponse,
-  ErrorResponse,
-  DeleteImageResponse,
-} from "@shared/api";
+import { UploadResponse, ErrorResponse } from "@shared/api";
 
 // Simple uploads directory in project root
 const uploadsDir = "uploads";
@@ -15,12 +11,11 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-const ANALYTICS_FILE = path.join(uploadsDir, "analytics.json");
+const ANALYTICS_FILE = path.join(uploadsDir, 'analytics.json');
 
 function loadAnalytics() {
-  if (!fs.existsSync(ANALYTICS_FILE))
-    return { uploads: 0, apiKeyUsage: 0, totalSize: 0 };
-  return JSON.parse(fs.readFileSync(ANALYTICS_FILE, "utf-8"));
+  if (!fs.existsSync(ANALYTICS_FILE)) return { uploads: 0, apiKeyUsage: 0, totalSize: 0 };
+  return JSON.parse(fs.readFileSync(ANALYTICS_FILE, 'utf-8'));
 }
 
 function saveAnalytics(analytics) {
@@ -47,16 +42,12 @@ const sanitizeFilename = (filename: string) => {
 };
 
 // Helper function to get next available number for filename
-const getNextFileNumber = (
-  baseName: string,
-  extension: string,
-  folder: string = uploadsDir,
-) => {
+const getNextFileNumber = (baseName: string, extension: string) => {
   let counter = 1;
   let filename = `${baseName}_${counter.toString().padStart(2, "0")}${extension}`;
 
   // Check if file exists, increment counter until we find available name
-  while (fs.existsSync(path.join(folder, filename))) {
+  while (fs.existsSync(path.join(uploadsDir, filename))) {
     counter++;
     filename = `${baseName}_${counter.toString().padStart(2, "0")}${extension}`;
   }
@@ -66,60 +57,16 @@ const getNextFileNumber = (
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
-  destination: (req, _file, cb) => {
-    // Check if user has an API key to determine folder
-    const apiKey = req.headers["x-api-key"] as string;
-
-    if (apiKey) {
-      // Try to find user's folder
-      const usersPath = path.join(uploadsDir, "users");
-
-      if (fs.existsSync(usersPath)) {
-        // Look for user folder by checking users.json
-        const usersFile = path.join(uploadsDir, "users.json");
-        if (fs.existsSync(usersFile)) {
-          try {
-            const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
-            const user = users.find((u: any) => u.apiKey === apiKey);
-            if (user && fs.existsSync(user.uploadsFolder)) {
-              return cb(null, user.uploadsFolder);
-            }
-          } catch (error) {
-            // Fall back to main uploads folder
-          }
-        }
-      }
-    }
-
-    // Anonymous users or fallback
+  destination: (_req, _file, cb) => {
     cb(null, uploadsDir);
   },
-  filename: (req, file, cb) => {
+  filename: (_req, file, cb) => {
     const sanitized = sanitizeFilename(file.originalname);
     const name = path.parse(sanitized).name;
     const extension = path.extname(sanitized);
 
-    // Get destination folder for checking existing files
-    const apiKey = req.headers["x-api-key"] as string;
-    let destinationFolder = uploadsDir;
-
-    if (apiKey) {
-      const usersFile = path.join(uploadsDir, "users.json");
-      if (fs.existsSync(usersFile)) {
-        try {
-          const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
-          const user = users.find((u: any) => u.apiKey === apiKey);
-          if (user && fs.existsSync(user.uploadsFolder)) {
-            destinationFolder = user.uploadsFolder;
-          }
-        } catch (error) {
-          // Use default folder
-        }
-      }
-    }
-
     // Get next available number: filename_01.ext, filename_02.ext, etc.
-    const finalFilename = getNextFileNumber(name, extension, destinationFolder);
+    const finalFilename = getNextFileNumber(name, extension);
     cb(null, finalFilename);
   },
 });
@@ -146,85 +93,9 @@ export const handleUpload: RequestHandler = (req, res) => {
     return res.status(400).send("No image file provided");
   }
 
-  const apiKey = req.headers["x-api-key"] as string;
-
-  // Generate the correct URL based on whether user has API key
-  let imageUrl: string;
-  if (apiKey) {
-    // Check if file was uploaded to user-specific folder
-    const usersFile = path.join(uploadsDir, "users.json");
-    if (fs.existsSync(usersFile)) {
-      try {
-        const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
-        const user = users.find((u: any) => u.apiKey === apiKey);
-        if (user) {
-          imageUrl = `https://x02.me/api/images/users/${user.username}/${req.file.filename}`;
-        } else {
-          imageUrl = `https://x02.me/api/images/${req.file.filename}`;
-        }
-      } catch (error) {
-        imageUrl = `https://x02.me/api/images/${req.file.filename}`;
-      }
-    } else {
-      imageUrl = `https://x02.me/api/images/${req.file.filename}`;
-    }
-  } else {
-    imageUrl = `https://x02.me/api/images/${req.file.filename}`;
-  }
-
-  // Track the upload with API key usage
-  updateAnalytics(!!apiKey, req.file.size);
-
-  // Update user usage if user is authenticated
-  if (apiKey) {
-    try {
-      fetch("http://localhost:8081/api/user/usage", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-        },
-        body: JSON.stringify({
-          filename: req.file.filename,
-          size: req.file.size,
-        }),
-      }).catch((err) => console.log("Usage update failed:", err));
-    } catch (error) {
-      console.log("Usage update error:", error);
-    }
-  }
+  const imageUrl = `https://x02.me/api/images/${req.file.filename}`;
+  // If you dont want the full URL:
+  // const imageUrl = `api/images/${req.file.filename}`;
 
   res.type("text/plain").send(imageUrl);
-};
-
-export const handleDeleteImage: RequestHandler = (req, res) => {
-  try {
-    const filename = req.params.filename;
-    const filePath = path.join(uploadsDir, filename);
-
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      const response: DeleteImageResponse = {
-        success: false,
-        error: "Image not found",
-      };
-      return res.status(404).json(response);
-    }
-
-    // Delete the file
-    fs.unlinkSync(filePath);
-
-    const response: DeleteImageResponse = {
-      success: true,
-      message: "Image deleted successfully",
-    };
-
-    res.json(response);
-  } catch (error) {
-    const response: DeleteImageResponse = {
-      success: false,
-      error: "Failed to delete image",
-    };
-    res.status(500).json(response);
-  }
 };
