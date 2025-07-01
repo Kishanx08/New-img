@@ -5,6 +5,13 @@ import { handleDemo } from "./routes/demo";
 import { uploadMiddleware, handleUpload } from "./routes/upload";
 import { handleAnalytics } from "./routes/analytics";
 import { validateApiKey, optionalApiKey } from "./middleware/auth";
+import { rateLimitMiddleware } from "./middleware/ratelimit";
+import {
+  handleGenerateApiKey,
+  handleGetDashboard,
+  handleRegenerateApiKey,
+  handleDeleteImage,
+} from "./routes/apikeys";
 
 export function createServer() {
   const app = express();
@@ -22,12 +29,26 @@ export function createServer() {
     res.json({ message: "Hello from X02 API!" });
   });
 
+  // API Key management endpoints
+  app.post("/api/generate-key", handleGenerateApiKey);
+  app.get("/api/dashboard", handleGetDashboard);
+  app.post("/api/regenerate-key", handleRegenerateApiKey);
+
   // Protected endpoints (API key required)
   app.get("/api/demo", validateApiKey, handleDemo);
   app.get("/api/analytics", validateApiKey, handleAnalytics);
 
-  // Image upload endpoint (API key required)
-  app.post("/api/upload", validateApiKey, uploadMiddleware, handleUpload);
+  // Image management endpoints (API key required)
+  app.delete("/api/images/:imageId", handleDeleteImage);
+
+  // Image upload endpoint (API key required + rate limited)
+  app.post(
+    "/api/upload",
+    validateApiKey,
+    rateLimitMiddleware,
+    uploadMiddleware,
+    handleUpload,
+  );
 
   return app;
 }
