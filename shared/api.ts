@@ -20,6 +20,7 @@ export interface ImageMetadata {
   size: number;
   uploadedAt: string;
   views: number;
+  apiKey?: string;
 }
 
 export interface ErrorResponse {
@@ -33,4 +34,57 @@ export interface AnalyticsResponse {
   apiKeyUsage: number;
   totalSize: number;
   apiKeyUsagePercentage: number;
+}
+
+// API Key System Types
+export interface ApiKeyData {
+  key: string;
+  createdAt: string;
+  ip: string;
+  uploads: number;
+  lastUsed?: string;
+  isActive: boolean;
+}
+
+export interface ApiKeyResponse {
+  success: boolean;
+  apiKey: string;
+  message: string;
+}
+
+export interface DashboardStats {
+  apiKey: string;
+  uploadsCount: number;
+  dailyLimit: number;
+  remainingUploads: number;
+  totalSize: number;
+  lastUsed?: string;
+  createdAt: string;
+}
+
+export interface UserImage {
+  id: string;
+  filename: string;
+  originalName: string;
+  url: string;
+  size: number;
+  uploadedAt: string;
+  views: number;
+}
+
+export interface DashboardResponse {
+  success: boolean;
+  stats: DashboardStats;
+  images: UserImage[];
+}
+
+export interface DeleteImageResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface RateLimitInfo {
+  limit: number;
+  remaining: number;
+  resetTime: string;
 }
