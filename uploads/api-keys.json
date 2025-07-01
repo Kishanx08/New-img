@@ -1,0 +1,28 @@
+[
+  {
+    "id": "fcd05efb-8b5f-469c-a190-61db90793bfe",
+    "key": "f8feeb497a4940419d68fd228660bf4b",
+    "createdAt": "2025-07-01T08:11:34.731Z",
+    "createdIp": "::1",
+    "usage": {
+      "count": 0
+    },
+    "limits": {
+      "dailyLimit": 50,
+      "hourlyLimit": 20
+    }
+  },
+  {
+    "id": "7178cad9-003d-457e-a5fe-b262143463d5",
+    "key": "b47c939892ab45db90adf00b015010e3",
+    "createdAt": "2025-07-01T08:16:02.063Z",
+    "createdIp": "::ffff:127.0.0.1",
+    "usage": {
+      "count": 0
+    },
+    "limits": {
+      "dailyLimit": 50,
+      "hourlyLimit": 20
+    }
+  }
+]
