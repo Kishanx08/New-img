@@ -98,3 +98,11 @@ export function createServer() {
 
   return app;
 }
+if (require.main === module) {
+  const app = createServer();
+  const PORT = process.env.PORT || 8080;
+  app.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
+}
+
