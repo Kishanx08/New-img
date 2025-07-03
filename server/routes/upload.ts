@@ -81,8 +81,12 @@ const storage = multer.diskStorage({
           try {
             const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
             const user = users.find((u: any) => u.apiKey === apiKey);
-            if (user && fs.existsSync(user.uploadsFolder)) {
-              return cb(null, user.uploadsFolder);
+            if (user) {
+              // Normalize path for cross-platform compatibility
+              const normalizedPath = user.uploadsFolder.replace(/\\/g, "/");
+              if (fs.existsSync(normalizedPath)) {
+                return cb(null, normalizedPath);
+              }
             }
           } catch (error) {
             // Fall back to main uploads folder
@@ -109,8 +113,12 @@ const storage = multer.diskStorage({
         try {
           const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
           const user = users.find((u: any) => u.apiKey === apiKey);
-          if (user && fs.existsSync(user.uploadsFolder)) {
-            destinationFolder = user.uploadsFolder;
+          if (user) {
+            // Normalize path for cross-platform compatibility
+            const normalizedPath = user.uploadsFolder.replace(/\\/g, "/");
+            if (fs.existsSync(normalizedPath)) {
+              destinationFolder = normalizedPath;
+            }
           }
         } catch (error) {
           // Use default folder
