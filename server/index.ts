@@ -30,6 +30,7 @@ import {
   updateUserUsageForUpload,
   deleteUserImage,
 } from "./routes/user-dashboard";
+import { handleShortlinkRedirect, getShortlinkInfo } from "./routes/shortlinks";
 
 export function createServer() {
   const app = express();
@@ -49,6 +50,10 @@ export function createServer() {
   app.get("/api/ping", (_req, res) => {
     res.json({ message: "Hello from X02 API!" });
   });
+
+  // Shortlink routes
+  app.get("/s/:code", handleShortlinkRedirect);
+  app.get("/api/s/:code", getShortlinkInfo);
 
   // Authentication endpoints
   app.post("/api/auth/register", registerUser);

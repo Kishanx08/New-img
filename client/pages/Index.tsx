@@ -119,7 +119,7 @@ export default function Index() {
         if (data.success && data.data.uploads) {
           const formattedUploads = data.data.uploads.map((upload: any) => ({
             id: `${upload.filename}_${Date.now()}`,
-            url: upload.url,
+            url: upload.shortUrl || upload.url, // Use short URL if available
             originalName: upload.filename,
             size: upload.size,
             uploadedAt: upload.timestamp,
