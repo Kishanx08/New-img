@@ -15,13 +15,21 @@ import {
   Activity,
   Key,
   Settings,
+  Trash2,
+  UserPlus,
+  User,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
+<<<<<<< HEAD
 import { UploadResponse } from "@shared/api";
+=======
+import { UploadResponse, DeleteImageResponse } from "@shared/api";
+import { UserSession, AnonymousSession } from "@shared/auth-types";
+>>>>>>> origin/main
 import favicon from "/favicon.ico";
 import {
   Dialog,
@@ -31,6 +39,21 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
+<<<<<<< HEAD
+=======
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useNavigate } from "react-router-dom";
+>>>>>>> origin/main
 
 interface UploadedImage {
   id: string;
@@ -42,14 +65,16 @@ interface UploadedImage {
 }
 
 export default function Index() {
+  const navigate = useNavigate();
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [showGallery, setShowGallery] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [showApiKeyDialog, setShowApiKeyDialog] = useState(false);
+  const [userSession, setUserSession] = useState<
+    UserSession | AnonymousSession | null
+  >(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editImage, setEditImage] = useState(null);
   const [editPreview, setEditPreview] = useState(null);
@@ -63,15 +88,35 @@ export default function Index() {
 
   useEffect(() => {
     setMounted(true);
+<<<<<<< HEAD
     // Set the hard-coded API key
     const hardcodedApiKey =
       "ef4c5a28f912a27e40c332fab67b0e3246380ec1d97eae45053d5a2d2c4c597d";
     setApiKey(hardcodedApiKey);
+=======
+
+    // Load user session
+    const sessionData = localStorage.getItem("x02_session");
+    if (sessionData) {
+      try {
+        const session = JSON.parse(sessionData);
+        setUserSession(session);
+      } catch (error) {
+        console.error("Failed to parse session:", error);
+        localStorage.removeItem("x02_session");
+        navigate("/auth");
+      }
+    } else {
+      navigate("/auth");
+    }
+
+>>>>>>> origin/main
     return () => {
       if (toastTimeout.current) clearTimeout(toastTimeout.current);
     };
-  }, []);
+  }, [navigate]);
 
+<<<<<<< HEAD
   // Save API key to localStorage when it changes
   useEffect(() => {
     if (apiKey) {
@@ -81,6 +126,8 @@ export default function Index() {
     }
   }, [apiKey]);
 
+=======
+>>>>>>> origin/main
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });
     if (toastTimeout.current) clearTimeout(toastTimeout.current);
@@ -117,6 +164,7 @@ export default function Index() {
     setUploadProgress(0);
     const formData = new FormData();
     formData.append("image", file);
+<<<<<<< HEAD
 
     // Add API key to form data if available
     if (apiKey) {
@@ -131,14 +179,29 @@ export default function Index() {
         headers["x-api-key"] = apiKey;
       }
 
+=======
+
+    try {
+>>>>>>> origin/main
       // Use XMLHttpRequest for progress
       await new Promise<void>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open("POST", "/api/upload");
+<<<<<<< HEAD
         xhr.setRequestHeader(
           "x-api-key",
           "ef4c5a28f912a27e40c332fab67b0e3246380ec1d97eae45053d5a2d2c4c597d",
         );
+=======
+
+        // Add API key for registered users
+        if (userSession && !userSession.isAnonymous) {
+          xhr.setRequestHeader(
+            "x-api-key",
+            (userSession as UserSession).apiKey,
+          );
+        }
+>>>>>>> origin/main
         xhr.upload.onprogress = (event) => {
           if (event.lengthComputable) {
             setUploadProgress(Math.round((event.loaded / event.total) * 100));
@@ -155,7 +218,8 @@ export default function Index() {
               originalName: file.name,
               size: file.size,
               uploadedAt: new Date().toISOString(),
-              apiKeyUsed: apiKey ? true : undefined,
+              apiKeyUsed:
+                userSession && !userSession.isAnonymous ? true : undefined,
             };
             setUploadedImages((prev) => [newImage, ...prev]);
             setShowGallery(true);
@@ -216,6 +280,41 @@ export default function Index() {
     const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const deleteImage = async (imageUrl: string, imageId: string) => {
+    try {
+      // Extract filename from URL
+      const filename = imageUrl.split("/").pop();
+      if (!filename) {
+        showToast("Cannot delete image: invalid URL", "error");
+        return;
+      }
+
+      const headers: Record<string, string> = {};
+
+      // Add API key for registered users
+      if (userSession && !userSession.isAnonymous) {
+        headers["x-api-key"] = (userSession as UserSession).apiKey;
+      }
+
+      const response = await fetch(`/api/images/${filename}`, {
+        method: "DELETE",
+        headers,
+      });
+
+      const result: DeleteImageResponse = await response.json();
+
+      if (result.success) {
+        // Remove from uploaded images list
+        setUploadedImages((prev) => prev.filter((img) => img.id !== imageId));
+        showToast("Image deleted successfully", "success");
+      } else {
+        showToast(result.error || "Failed to delete image", "error");
+      }
+    } catch (error) {
+      showToast("Failed to delete image", "error");
+    }
   };
 
   const theme = darkMode
@@ -285,6 +384,7 @@ export default function Index() {
               X02 Image Uploader
             </h1>
           </div>
+<<<<<<< HEAD
           <div className="flex items-center gap-2">
             <Button
               size="sm"
@@ -315,6 +415,67 @@ export default function Index() {
             >
               {darkMode ? "Light Mode" : "Dark Mode"}
             </Button>
+=======
+          <div className="flex items-center gap-3">
+            {userSession && !userSession.isAnonymous && (
+              <div className="text-sm text-green-300">
+                Welcome, {(userSession as UserSession).username}
+              </div>
+            )}
+            {userSession?.isAnonymous && (
+              <div className="text-sm text-green-300/70">Anonymous User</div>
+            )}
+
+            <div className="flex gap-2">
+              {userSession?.isAnonymous && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-green-400/40 text-green-300 hover:bg-green-900/20"
+                  onClick={() => {
+                    localStorage.removeItem("x02_session");
+                    navigate("/auth");
+                  }}
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Register
+                </Button>
+              )}
+
+              {!userSession?.isAnonymous && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-green-400/40 text-green-300 hover:bg-green-900/20"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Dashboard
+                </Button>
+              )}
+
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-red-400/40 text-red-300 hover:bg-red-900/20"
+                onClick={() => {
+                  localStorage.removeItem("x02_session");
+                  navigate("/auth");
+                }}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+
+              <Button
+                size="sm"
+                className="border border-green-400/40 bg-transparent text-green-300 hover:bg-green-900/20"
+                onClick={() => setDarkMode((d) => !d)}
+              >
+                {darkMode ? "Light Mode" : "Dark Mode"}
+              </Button>
+            </div>
+>>>>>>> origin/main
           </div>
         </div>
       </header>
@@ -366,6 +527,21 @@ export default function Index() {
                 </div>
                 <div className="text-green-300 text-sm">
                   JPG, PNG, GIF, etc. (max 30MB)
+<<<<<<< HEAD
+=======
+                  {userSession?.isAnonymous && (
+                    <span className="block text-yellow-300 text-xs mt-1">
+                      Anonymous: 10 uploads/hour
+                    </span>
+                  )}
+                  {userSession && !userSession.isAnonymous && (
+                    <span className="block text-green-400 text-xs mt-1">
+                      Registered:{" "}
+                      {(userSession as UserSession).limits.dailyLimit}{" "}
+                      uploads/day
+                    </span>
+                  )}
+>>>>>>> origin/main
                 </div>
               </>
             )}
@@ -413,11 +589,47 @@ export default function Index() {
                   <Button
                     size="sm"
                     variant="outline"
+<<<<<<< HEAD
                     className={`${theme.buttonOutline} hover:shadow-green-400/20 transition-shadow`}
+=======
+                    className={`${theme.buttonOutline} hover:shadow-green-400/20 transition-shadow mr-2`}
+>>>>>>> origin/main
                     onClick={() => window.open(image.url, "_blank")}
                   >
                     Open
                   </Button>
+<<<<<<< HEAD
+=======
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-red-500 text-red-500 hover:bg-red-500/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Image?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will permanently delete "{image.originalName}".
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteImage(image.url, image.id)}
+                          className="bg-red-500 text-white hover:bg-red-600"
+                        >
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+>>>>>>> origin/main
                 </div>
               ))}
             </div>
@@ -446,6 +658,7 @@ export default function Index() {
             </div>
           )}
           <DialogFooter>
+<<<<<<< HEAD
             <Button
               onClick={() => {
                 setEditModalOpen(false);
@@ -496,15 +709,18 @@ export default function Index() {
             </div>
           </div>
           <DialogFooter>
+=======
+>>>>>>> origin/main
             <Button
-              variant="outline"
-              onClick={() => setApiKey("")}
-              disabled={!apiKey}
+              onClick={() => {
+                setEditModalOpen(false);
+                handleFileUpload(editImage);
+              }}
             >
-              Clear
+              Upload
             </Button>
             <DialogClose asChild>
-              <Button>Save</Button>
+              <Button variant="outline">Cancel</Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>

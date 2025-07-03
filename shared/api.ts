@@ -36,6 +36,7 @@ export interface AnalyticsResponse {
   apiKeyUsagePercentage: number;
 }
 
+<<<<<<< HEAD
 // API Key System Types
 export interface ApiKeyData {
   key: string;
@@ -87,4 +88,10 @@ export interface RateLimitInfo {
   limit: number;
   remaining: number;
   resetTime: string;
+=======
+export interface DeleteImageResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+>>>>>>> origin/main
 }
