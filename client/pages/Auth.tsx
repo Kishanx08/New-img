@@ -92,7 +92,8 @@ export default function Auth() {
           description: `Account created successfully. You can upload ${data.data.user.limits.dailyLimit} images per day.`,
         });
 
-        navigate("/");
+        // Force page reload to update authentication state
+        window.location.href = "/";
       } else {
         toast({
           title: "Registration Failed",
@@ -143,7 +144,8 @@ export default function Auth() {
           description: `Logged in as ${data.data.user.username}`,
         });
 
-        navigate("/");
+        // Force page reload to update authentication state
+        window.location.href = "/";
       } else {
         toast({
           title: "Login Failed",
@@ -180,7 +182,8 @@ export default function Auth() {
         "You can upload 10 images per hour. Register for higher limits!",
     });
 
-    navigate("/");
+    // Force page reload to update authentication state
+    window.location.href = "/";
   };
 
   const [darkMode, setDarkMode] = useState(true);
