@@ -97,8 +97,8 @@ export function createServer() {
     handleUpload,
   );
 
-  // Image deletion endpoint (API key required)
-  app.delete("/api/images/:filename", validateApiKey, handleDeleteImage);
+  // Image deletion endpoint (API key optional for user files)
+  app.delete("/api/images/:filename", optionalApiKey, handleDeleteImage);
 
   // Only serve static files and SPA fallback in production
   if (process.env.NODE_ENV === "production") {
