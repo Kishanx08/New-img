@@ -8,6 +8,7 @@ import {
   ErrorResponse,
   DeleteImageResponse,
 } from "@shared/api";
+import { createShortlink } from "./shortlinks";
 
 // Simple uploads directory in project root
 const uploadsDir = "uploads";
@@ -156,29 +157,9 @@ export const handleUpload: RequestHandler = (req, res) => {
 
   const apiKey = req.headers["x-api-key"] as string;
 
-  // Generate the correct URL based on whether user has API key
-  let imageUrl: string;
-  if (apiKey) {
-    // Check if file was uploaded to user-specific folder
-    const usersFile = path.join(uploadsDir, "users.json");
-    if (fs.existsSync(usersFile)) {
-      try {
-        const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
-        const user = users.find((u: any) => u.apiKey === apiKey);
-        if (user) {
-          imageUrl = `https://x02.me/api/images/users/${user.username}/${req.file.filename}`;
-        } else {
-          imageUrl = `https://x02.me/api/images/${req.file.filename}`;
-        }
-      } catch (error) {
-        imageUrl = `https://x02.me/api/images/${req.file.filename}`;
-      }
-    } else {
-      imageUrl = `https://x02.me/api/images/${req.file.filename}`;
-    }
-  } else {
-    imageUrl = `https://x02.me/api/images/${req.file.filename}`;
-  }
+  // Generate short URL for the uploaded file
+  const shortCode = createShortlink(req.file.filename);
+  const shortUrl = `https://x02.me/s/${shortCode}`;
 
   // Track the upload with API key usage
   updateAnalytics(!!apiKey, req.file.size);
@@ -202,7 +183,7 @@ export const handleUpload: RequestHandler = (req, res) => {
     }
   }
 
-  res.type("text/plain").send(imageUrl);
+  res.type("text/plain").send(shortUrl);
 };
 
 export const handleDeleteImage: RequestHandler = (req, res) => {
