@@ -2,7 +2,6 @@ import { RequestHandler } from "express";
 import fs from "fs";
 import path from "path";
 import { User } from "@shared/auth-types";
-import { createShortlink } from "./shortlinks";
 
 const USERS_FILE = path.join("uploads", "users.json");
 
@@ -37,12 +36,9 @@ function getUserUploads(user: User) {
       .map((file) => {
         const filePath = path.join(userFolder, file);
         const stats = fs.statSync(filePath);
-        // Generate or get existing short URL
-        const shortCode = createShortlink(file);
         return {
           filename: file,
           url: `/api/images/users/${user.username}/${file}`,
-          shortUrl: `https://x02.me/s/${shortCode}`,
           timestamp: stats.birthtime.toISOString(),
           size: stats.size,
         };
