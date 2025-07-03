@@ -19,7 +19,8 @@ function saveUsers(users: User[]) {
 }
 
 function getUserUploads(user: User) {
-  const userFolder = user.uploadsFolder;
+  // Normalize path for cross-platform compatibility
+  const userFolder = user.uploadsFolder.replace(/\\/g, "/");
   if (!fs.existsSync(userFolder)) {
     return [];
   }
