@@ -96,6 +96,14 @@ export function createServer() {
   // Image deletion endpoint (API key required)
   app.delete("/api/images/:filename", validateApiKey, handleDeleteImage);
 
+  // Serve frontend static files
+  app.use(express.static(path.join(__dirname, "../../dist/spa")));
+
+  // SPA fallback: serve index.html for any unknown route (after API and static)
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../../dist/spa/index.html"));
+  });
+
   return app;
 }
 if (require.main === module) {
