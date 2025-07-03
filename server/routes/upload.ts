@@ -211,6 +211,10 @@ export const handleDeleteImage: RequestHandler = (req, res) => {
     const apiKey = req.headers["x-api-key"] as string;
     let filePath = path.join(uploadsDir, filename);
 
+    console.log(
+      `Delete request for filename: ${filename}, apiKey: ${apiKey ? "provided" : "none"}`,
+    );
+
     // If user has API key, check user-specific folder first
     if (apiKey) {
       const usersFile = path.join(uploadsDir, "users.json");
@@ -222,27 +226,35 @@ export const handleDeleteImage: RequestHandler = (req, res) => {
             // Normalize path for cross-platform compatibility
             const userFolder = user.uploadsFolder.replace(/\\/g, "/");
             const userFilePath = path.join(userFolder, filename);
+            console.log(`Checking user path: ${userFilePath}`);
             if (fs.existsSync(userFilePath)) {
               filePath = userFilePath;
+              console.log(`Found file in user folder: ${filePath}`);
+            } else {
+              console.log(
+                `File not found in user folder, checking main: ${filePath}`,
+              );
             }
           }
         } catch (error) {
-          // Continue with default path
+          console.log("Error reading users file:", error);
         }
       }
     }
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
+      console.log(`File not found at path: ${filePath}`);
       const response: DeleteImageResponse = {
         success: false,
-        error: "Image not found",
+        error: `Image not found at ${filePath}`,
       };
       return res.status(404).json(response);
     }
 
     // Delete the file
     fs.unlinkSync(filePath);
+    console.log(`Successfully deleted: ${filePath}`);
 
     const response: DeleteImageResponse = {
       success: true,
@@ -251,6 +263,7 @@ export const handleDeleteImage: RequestHandler = (req, res) => {
 
     res.json(response);
   } catch (error) {
+    console.log("Delete error:", error);
     const response: DeleteImageResponse = {
       success: false,
       error: "Failed to delete image",
