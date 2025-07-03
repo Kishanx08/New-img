@@ -178,7 +178,7 @@ export const handleUpload: RequestHandler = (req, res) => {
   // Update user usage if user is authenticated
   if (apiKey) {
     try {
-      fetch("http://localhost:8081/api/user/usage", {
+      fetch("http://localhost:8080/api/user/usage", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
