@@ -208,7 +208,29 @@ export const handleUpload: RequestHandler = (req, res) => {
 export const handleDeleteImage: RequestHandler = (req, res) => {
   try {
     const filename = req.params.filename;
-    const filePath = path.join(uploadsDir, filename);
+    const apiKey = req.headers["x-api-key"] as string;
+    let filePath = path.join(uploadsDir, filename);
+
+    // If user has API key, check user-specific folder first
+    if (apiKey) {
+      const usersFile = path.join(uploadsDir, "users.json");
+      if (fs.existsSync(usersFile)) {
+        try {
+          const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
+          const user = users.find((u: any) => u.apiKey === apiKey);
+          if (user) {
+            // Normalize path for cross-platform compatibility
+            const userFolder = user.uploadsFolder.replace(/\\/g, "/");
+            const userFilePath = path.join(userFolder, filename);
+            if (fs.existsSync(userFilePath)) {
+              filePath = userFilePath;
+            }
+          }
+        } catch (error) {
+          // Continue with default path
+        }
+      }
+    }
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
