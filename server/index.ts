@@ -1,6 +1,10 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { handleDemo } from "./routes/demo";
 import {
   uploadMiddleware,
@@ -96,13 +100,16 @@ export function createServer() {
   // Image deletion endpoint (API key required)
   app.delete("/api/images/:filename", validateApiKey, handleDeleteImage);
 
-  // Serve frontend static files
-  app.use(express.static(path.join(__dirname, "../../dist/spa")));
+  // Only serve static files and SPA fallback in production
+  if (process.env.NODE_ENV === "production") {
+    // Serve frontend static files
+    app.use(express.static(path.join(__dirname, "../../dist/spa")));
 
-  // SPA fallback: serve index.html for any unknown route (after API and static)
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../../dist/spa/index.html"));
-  });
+    // SPA fallback: serve index.html for any unknown route (after API and static)
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(__dirname, "../../dist/spa/index.html"));
+    });
+  }
 
   return app;
 }
@@ -113,4 +120,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(`Server listening on port ${PORT}`);
   });
 }
-
