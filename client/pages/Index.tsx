@@ -88,6 +88,10 @@ export default function Index() {
       try {
         const session = JSON.parse(sessionData);
         setUserSession(session);
+        // Load existing uploads if user is authenticated
+        if (!session.isAnonymous && session.apiKey) {
+          loadUserUploads(session.apiKey);
+        }
       } catch (error) {
         console.error("Failed to parse session:", error);
         localStorage.removeItem("x02_session");
@@ -101,6 +105,33 @@ export default function Index() {
       if (toastTimeout.current) clearTimeout(toastTimeout.current);
     };
   }, [navigate]);
+
+  const loadUserUploads = async (apiKey: string) => {
+    try {
+      const response = await fetch("/api/user/dashboard", {
+        headers: {
+          "x-api-key": apiKey,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data.uploads) {
+          const formattedUploads = data.data.uploads.map((upload: any) => ({
+            id: `${upload.filename}_${Date.now()}`,
+            url: upload.url,
+            originalName: upload.filename,
+            size: upload.size,
+            uploadedAt: upload.timestamp,
+            apiKeyUsed: true,
+          }));
+          setUploadedImages(formattedUploads);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to load user uploads:", error);
+    }
+  };
 
   const showToast = (message: string, type: "success" | "error") => {
     setToast({ message, type });

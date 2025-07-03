@@ -123,6 +123,6 @@ export const anonymousRateLimit = rateLimitMiddleware({
 
 export const apiKeyRateLimit = rateLimitMiddleware({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
-  maxRequests: 50,
+  maxRequests: 100, // Match user daily limit
   keyGenerator: (req) => `api:${req.headers["x-api-key"]}`,
 });
