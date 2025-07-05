@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+
 /**
  * Extracts the subdomain from a hostname that ends with 'x02.me'
  *
@@ -52,7 +55,7 @@ export function getSubdomain(hostname: string): string | null {
   }
   
   /**
-   * Validates if a subdomain corresponds to an existing user folder
+   * Validates if a subdomain corresponds to an existing user folder (case-insensitive)
    *
    * @param subdomain - The subdomain to validate
    * @returns boolean indicating if the user folder exists
@@ -60,15 +63,39 @@ export function getSubdomain(hostname: string): string | null {
   export function isValidUserSubdomain(subdomain: string): boolean {
     if (!subdomain) return false;
   
-    // Only allow single-level subdomains for user folders (no dots)
-    if (subdomain.includes(".")) return false;
+    const usersDir = path.join("uploads", "users");
+    
+    // Check if users directory exists
+    if (!fs.existsSync(usersDir)) return false;
   
-    // Check against existing users (you can enhance this to check filesystem)
-    const fs = require("fs");
-    const path = require("path");
+    // Get all user directories
+    const userDirs = fs.readdirSync(usersDir);
+    
+    // Check if any directory matches the subdomain (case-insensitive)
+    return userDirs.some(dir => 
+      dir.toLowerCase() === subdomain.toLowerCase() && 
+      fs.statSync(path.join(usersDir, dir)).isDirectory()
+    );
+  }
   
-    const userFolder = path.join("uploads", "users", subdomain);
-    return fs.existsSync(userFolder);
+  /**
+   * Gets the actual case-sensitive folder name for a subdomain
+   */
+  export function getActualUserFolder(subdomain: string): string | null {
+    if (!subdomain) return null;
+  
+    const usersDir = path.join("uploads", "users");
+    
+    if (!fs.existsSync(usersDir)) return null;
+  
+    const userDirs = fs.readdirSync(usersDir);
+    
+    const actualFolder = userDirs.find(dir => 
+      dir.toLowerCase() === subdomain.toLowerCase() && 
+      fs.statSync(path.join(usersDir, dir)).isDirectory()
+    );
+    
+    return actualFolder || null;
   }
   
   /**
@@ -84,12 +111,17 @@ export function getSubdomain(hostname: string): string | null {
   
     // Remove any path separators and dangerous characters
     const sanitized = filename
-      .replace(/[^a-zA-Z0-9._-]/g, "_")
-      .replace(/\.{2,}/g, ".")
-      .replace(/^\.+|\.+$/g, ""); // Remove leading/trailing dots
+      .replace(/[^a-zA-Z0-9.-]/g, "_")
+      .replace(/_{2,}/g, "_")
+      .replace(/^_+|_+$/g, "");
   
     // Ensure filename is not empty and doesn't start with dot
     if (!sanitized || sanitized.startsWith(".")) {
+      return null;
+    }
+  
+    // Check for path traversal attempts
+    if (sanitized.includes("..") || sanitized.includes("/") || sanitized.includes("\\")) {
       return null;
     }
   

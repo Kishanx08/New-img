@@ -4,6 +4,7 @@ import path from "path";
 import {
   getSubdomain,
   isValidUserSubdomain,
+  getActualUserFolder,
   sanitizeFilename,
 } from "../utils/getSubdomain";
 
@@ -51,6 +52,19 @@ export const handleSubdomainImages: RequestHandler = (req, res) => {
       });
     }
 
+    // Get the actual case-sensitive folder name
+    const actualFolder = getActualUserFolder(subdomain);
+    if (!actualFolder) {
+      console.log(
+        `[Subdomain Images] Could not determine actual folder for subdomain: ${subdomain}`,
+      );
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error",
+        message: "Could not determine user folder",
+      });
+    }
+
     // Get and sanitize filename
     const rawFilename = req.params.filename;
     const filename = sanitizeFilename(rawFilename);
@@ -65,14 +79,14 @@ export const handleSubdomainImages: RequestHandler = (req, res) => {
       });
     }
 
-    // Construct file path
-    const filePath = path.join("uploads", "users", subdomain, filename);
+    // Construct file path using the actual folder name
+    const filePath = path.join("uploads", "users", actualFolder, filename);
     const absoluteFilePath = path.resolve(filePath);
 
     console.log(`[Subdomain Images] Looking for file: ${absoluteFilePath}`);
 
     // Security check: ensure the resolved path is within the expected directory
-    const expectedBasePath = path.resolve("uploads", "users", subdomain);
+    const expectedBasePath = path.resolve("uploads", "users", actualFolder);
     if (!absoluteFilePath.startsWith(expectedBasePath)) {
       console.log(
         `[Subdomain Images] Path traversal attempt detected: ${absoluteFilePath}`,
@@ -174,7 +188,17 @@ export const listSubdomainImages: RequestHandler = (req, res) => {
       });
     }
 
-    const userDir = path.join("uploads", "users", subdomain);
+    // Get the actual case-sensitive folder name
+    const actualFolder = getActualUserFolder(subdomain);
+    if (!actualFolder) {
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error",
+        message: "Could not determine user folder",
+      });
+    }
+
+    const userDir = path.join("uploads", "users", actualFolder);
     const files = fs.readdirSync(userDir);
 
     const imageExtensions = [
