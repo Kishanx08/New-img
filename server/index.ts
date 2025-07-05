@@ -30,6 +30,10 @@ import {
   updateUserUsageForUpload,
   deleteUserImage,
 } from "./routes/user-dashboard";
+import {
+  handleSubdomainImages,
+  listSubdomainImages,
+} from "./routes/subdomain-images";
 
 export function createServer() {
   const app = express();
@@ -49,6 +53,11 @@ export function createServer() {
   app.get("/api/ping", (_req, res) => {
     res.json({ message: "Hello from X02 API!" });
   });
+
+  // Subdomain-based image serving routes
+  // These routes will handle requests like kapoor.x02.me/api/images/photo.png
+  app.get("/api/images/:filename", handleSubdomainImages);
+  app.get("/api/images", listSubdomainImages);
 
   // Authentication endpoints
   app.post("/api/auth/register", registerUser);
@@ -116,7 +125,14 @@ export function createServer() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const app = createServer();
   const PORT = process.env.PORT || 8080;
-  app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}`);
+
+  // Bind to 0.0.0.0 to accept requests from all hostnames/subdomains
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`🚀 Fusion Starter server running on port ${PORT}`);
+    console.log(`📱 Frontend: http://localhost:${PORT}`);
+    console.log(`🔧 API: http://localhost:${PORT}/api`);
+    console.log(
+      `🌐 Subdomain images: https://{username}.x02.me/api/images/{filename}`,
+    );
   });
 }
