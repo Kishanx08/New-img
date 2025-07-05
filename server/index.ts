@@ -125,12 +125,12 @@ export function createServer() {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const app = createServer();
   const PORT = process.env.PORT || 8080;
-
   // Bind to 0.0.0.0 to accept requests from all hostnames/subdomains
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`🚀 Fusion Starter server running on port ${PORT}`);
-    console.log(`📱 Frontend: http://localhost:${PORT}`);
-    console.log(`🔧 API: http://localhost:${PORT}/api`);
+  const port = parseInt(process.env.PORT || "8080", 10);
+  app.listen(port, "0.0.0.0", () => {
+    console.log(`🚀 Fusion Starter server running on port ${port}`);
+    console.log(`📱 Frontend: http://localhost:${port}`);
+    console.log(`🔧 API: http://localhost:${port}/api`);
     console.log(
       `🌐 Subdomain images: https://{username}.x02.me/api/images/{filename}`,
     );
