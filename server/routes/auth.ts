@@ -43,7 +43,8 @@ function getClientIp(req: any): string {
 }
 
 function createUserFolder(username: string): string {
-  const userFolder = path.join("uploads", "users", username);
+  const lowerUsername = username.toLowerCase();
+  const userFolder = path.join("uploads", "users", lowerUsername);
   if (!fs.existsSync(userFolder)) {
     fs.mkdirSync(userFolder, { recursive: true });
   }
@@ -53,7 +54,7 @@ function createUserFolder(username: string): string {
 
 export const registerUser: RequestHandler = async (req, res) => {
   try {
-    const { username, password }: AuthRequest = req.body;
+    let { username, password }: AuthRequest = req.body;
 
     if (!username || !password) {
       const response: AuthResponse = {
@@ -63,12 +64,15 @@ export const registerUser: RequestHandler = async (req, res) => {
       return res.status(400).json(response);
     }
 
+    // Enforce lowercase username
+    username = username.toLowerCase();
+
     // Validate username (alphanumeric, 3-20 chars)
-    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+    if (!/^[a-z0-9_]{3,20}$/.test(username)) {
       const response: AuthResponse = {
         success: false,
         error:
-          "Username must be 3-20 characters and contain only letters, numbers, and underscores",
+          "Username must be 3-20 characters and contain only lowercase letters, numbers, and underscores",
       };
       return res.status(400).json(response);
     }

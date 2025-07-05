@@ -38,7 +38,7 @@ function getUserUploads(user: User) {
         const stats = fs.statSync(filePath);
         return {
           filename: file,
-          url: `https://${user.username}.x02.me/api/images/${file}`,
+          url: `https://${user.username.toLowerCase()}.x02.me/api/images/${file}`,
           timestamp: stats.birthtime.toISOString(),
           size: stats.size,
         };
