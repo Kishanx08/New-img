@@ -166,7 +166,7 @@ export const handleUpload: RequestHandler = (req, res) => {
         const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
         const user = users.find((u: any) => u.apiKey === apiKey);
         if (user) {
-          imageUrl = `https://x02.me/api/images/users/${user.username}/${req.file.filename}`;
+          imageUrl = `https://${user.username}.x02.me/api/images/${req.file.filename}`;
         } else {
           imageUrl = `https://x02.me/api/images/${req.file.filename}`;
         }
