@@ -103,6 +103,9 @@ export default function Admin() {
   const [performance, setPerformance] = useState<any>(null);
   const [performanceLoading, setPerformanceLoading] = useState(false);
   const [performanceError, setPerformanceError] = useState<string | null>(null);
+  const [overview, setOverview] = useState<any>(null);
+  const [overviewLoading, setOverviewLoading] = useState(false);
+  const [overviewError, setOverviewError] = useState<string | null>(null);
 
   // Mock data for now - will be replaced with real API calls
   useEffect(() => {
@@ -236,6 +239,20 @@ export default function Admin() {
       })
       .catch(err => setPerformanceError(err.message))
       .finally(() => setPerformanceLoading(false));
+  }, [tab]);
+
+  useEffect(() => {
+    if (tab !== 'overview') return;
+    setOverviewLoading(true);
+    setOverviewError(null);
+    fetch('/api/admin/overview')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) setOverview(data.overview);
+        else setOverviewError(data.error || 'Failed to load overview');
+      })
+      .catch(err => setOverviewError(err.message))
+      .finally(() => setOverviewLoading(false));
   }, [tab]);
 
   const handleSearch = async (query: string) => {
@@ -540,53 +557,60 @@ export default function Admin() {
 
             {/* Quick Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="bg-[#23272A] border border-[#222] rounded-xl shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-5 h-5 text-[#6FFF00]" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-400">Total Users</p>
-                      <p className="text-2xl font-bold text-[#6FFF00]">24</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#23272A] border border-[#222] rounded-xl shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-2">
-                    <Upload className="w-5 h-5 text-[#6FFF00]" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-400">Total Uploads</p>
-                      <p className="text-2xl font-bold text-[#6FFF00]">1,234</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#23272A] border border-[#222] rounded-xl shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-2">
-                    <HardDrive className="w-5 h-5 text-[#6FFF00]" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-400">Storage Used</p>
-                      <p className="text-2xl font-bold text-[#6FFF00]">2.4 GB</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-[#23272A] border border-[#222] rounded-xl shadow-lg">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="w-5 h-5 text-[#6FFF00]" />
-                    <div>
-                      <p className="text-sm font-medium text-gray-400">Today's Uploads</p>
-                      <p className="text-2xl font-bold text-[#6FFF00]">89</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {overviewLoading ? (
+                <div className="col-span-4 text-center py-8 text-[#6FFF00] animate-pulse">Loading overview...</div>
+              ) : overviewError ? (
+                <div className="col-span-4 text-center py-8 text-red-400">{overviewError}</div>
+              ) : overview ? (
+                <>
+                  <Card className="bg-[#23272A] border border-[#222] rounded-xl shadow-lg">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-5 h-5 text-[#6FFF00]" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-400">Total Users</p>
+                          <p className="text-2xl font-bold text-[#6FFF00]">{overview.userCount}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-[#23272A] border border-[#222] rounded-xl shadow-lg">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <Upload className="w-5 h-5 text-[#6FFF00]" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-400">Total Uploads</p>
+                          <p className="text-2xl font-bold text-[#6FFF00]">{overview.uploadCount}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-[#23272A] border border-[#222] rounded-xl shadow-lg">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <HardDrive className="w-5 h-5 text-[#6FFF00]" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-400">Storage Used</p>
+                          <p className="text-2xl font-bold text-[#6FFF00]">{(overview.storageUsed / (1024 * 1024)).toFixed(2)} MB</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="bg-[#23272A] border border-[#222] rounded-xl shadow-lg">
+                    <CardContent className="p-6">
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="w-5 h-5 text-[#6FFF00]" />
+                        <div>
+                          <p className="text-sm font-medium text-gray-400">Today's Uploads</p>
+                          <p className="text-2xl font-bold text-[#6FFF00]">{overview.todaysUploads}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <div className="col-span-4 text-gray-400">No overview data available.</div>
+              )}
             </div>
           </TabsContent>
 
