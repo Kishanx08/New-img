@@ -11,6 +11,8 @@ import {
   ChartLegend,
 } from '@/components/ui/chart';
 import * as RechartsPrimitive from 'recharts';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useToast } from '@/components/ui/use-toast';
 
 import { 
   Activity, 
@@ -106,66 +108,11 @@ export default function Admin() {
   const [overview, setOverview] = useState<any>(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewError, setOverviewError] = useState<string | null>(null);
-
-  // Mock data for now - will be replaced with real API calls
-  useEffect(() => {
-    // Simulate real-time activity feed
-    const mockActivities: ActivityItem[] = [
-      {
-        id: '1',
-        type: 'upload',
-        message: 'New file uploaded: screenshot.png (2.3MB)',
-        timestamp: new Date().toISOString(),
-        user: 'kishan',
-        severity: 'info'
-      },
-      {
-        id: '2',
-        type: 'user',
-        message: 'New user registered: testuser',
-        timestamp: new Date(Date.now() - 30000).toISOString(),
-        user: 'testuser',
-        severity: 'success'
-      },
-      {
-        id: '3',
-        type: 'error',
-        message: 'Rate limit exceeded for user: spammer',
-        timestamp: new Date(Date.now() - 60000).toISOString(),
-        user: 'spammer',
-        severity: 'warning'
-      },
-      {
-        id: '4',
-        type: 'system',
-        message: 'Watermark processing completed',
-        timestamp: new Date(Date.now() - 90000).toISOString(),
-        severity: 'info'
-      }
-    ];
-
-    setActivities(mockActivities);
-
-    // Simulate system health updates
-    const updateSystemHealth = () => {
-      setSystemHealth({
-        cpu: Math.random() * 100,
-        memory: Math.random() * 100,
-        disk: Math.random() * 100,
-        network: {
-          upload: Math.random() * 1000,
-          download: Math.random() * 1000
-        },
-        activeConnections: Math.floor(Math.random() * 50),
-        uptime: '2h 15m'
-      });
-    };
-
-    updateSystemHealth();
-    const interval = setInterval(updateSystemHealth, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [modalType, setModalType] = useState<'view' | 'edit' | 'resetApi' | null>(null);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [newApiKey, setNewApiKey] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Fetch real user data for Users tab
   useEffect(() => {
@@ -334,6 +281,83 @@ export default function Admin() {
     }
   };
 
+  // User action handlers
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setModalType('view');
+  };
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setModalType('edit');
+  };
+  const handleSuspendUser = async (user: User) => {
+    setApiLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: user.status === 'active' ? 'suspended' : 'active' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: `User ${user.status === 'active' ? 'suspended' : 'activated'} successfully` });
+        // Refresh users
+        setTab('users');
+      } else {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to update user status', variant: 'destructive' });
+    }
+    setApiLoading(false);
+  };
+  const handleResetApi = async (user: User) => {
+    setApiLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/reset-api`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setNewApiKey(data.apiKey);
+        setModalType('resetApi');
+        toast({ title: 'API Key Reset', description: 'New API key generated.' });
+      } else {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to reset API key', variant: 'destructive' });
+    }
+    setApiLoading(false);
+  };
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+    setApiLoading(true);
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const username = formData.get('username');
+    const dailyLimit = formData.get('dailyLimit');
+    const hourlyLimit = formData.get('hourlyLimit');
+    try {
+      const res = await fetch(`/api/admin/users/${selectedUser.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, dailyLimit: Number(dailyLimit), hourlyLimit: Number(hourlyLimit) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: 'User updated successfully' });
+        setModalType(null);
+        setSelectedUser(null);
+        setTab('users');
+      } else {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to update user', variant: 'destructive' });
+    }
+    setApiLoading(false);
+  };
+
   return (
     <div className="min-h-screen bg-[#0e101e] text-gray-200 flex">
       {/* Sidebar Navigation */}
@@ -448,7 +472,7 @@ export default function Admin() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4 max-h-96 overflow-y-auto">
-                          {activities.map((activity) => (
+                          {overview?.activityFeed.map((activity: any) => (
                             <div key={activity.id} className="flex items-start space-x-3 p-3 border border-[#222] rounded-lg bg-[#181A1B]">
                               <div className={`w-2 h-2 rounded-full mt-2 ${getSeverityColor(activity.severity)}`} />
                               <div className="flex-1">
@@ -490,12 +514,12 @@ export default function Admin() {
                               <Cpu className="w-4 h-4 text-[#00E6E6]" />
                               <span className="text-sm font-medium text-gray-200">CPU</span>
                             </div>
-                            <span className="text-sm text-[#00E6E6]">{systemHealth.cpu.toFixed(1)}%</span>
+                            <span className="text-sm text-[#00E6E6]">{overview?.systemHealth.cpu.toFixed(1)}%</span>
                           </div>
                           <div className="w-full bg-[#181A1B] rounded-full h-2">
                             <div 
                               className="bg-[#00E6E6] h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${systemHealth.cpu}%` }}
+                              style={{ width: `${overview?.systemHealth.cpu}%` }}
                             />
                           </div>
                         </div>
@@ -507,12 +531,12 @@ export default function Admin() {
                               <MemoryStick className="w-4 h-4 text-[#00E6E6]" />
                               <span className="text-sm font-medium text-gray-200">Memory</span>
                             </div>
-                            <span className="text-sm text-[#00E6E6]">{systemHealth.memory.toFixed(1)}%</span>
+                            <span className="text-sm text-[#00E6E6]">{overview?.systemHealth.memory.toFixed(1)}%</span>
                           </div>
                           <div className="w-full bg-[#181A1B] rounded-full h-2">
                             <div 
                               className="bg-[#00E6E6] h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${systemHealth.memory}%` }}
+                              style={{ width: `${overview?.systemHealth.memory}%` }}
                             />
                           </div>
                         </div>
@@ -524,29 +548,13 @@ export default function Admin() {
                               <HardDrive className="w-4 h-4 text-[#00E6E6]" />
                               <span className="text-sm font-medium text-gray-200">Disk</span>
                             </div>
-                            <span className="text-sm text-[#00E6E6]">{systemHealth.disk.toFixed(1)}%</span>
+                            <span className="text-sm text-[#00E6E6]">{overview?.systemHealth.disk.toFixed(1)}%</span>
                           </div>
                           <div className="w-full bg-[#181A1B] rounded-full h-2">
                             <div 
                               className="bg-[#00E6E6] h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${systemHealth.disk}%` }}
+                              style={{ width: `${overview?.systemHealth.disk}%` }}
                             />
-                          </div>
-                        </div>
-
-                        {/* Network */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Network className="w-4 h-4 text-[#00E6E6]" />
-                              <span className="text-sm font-medium text-gray-200">Network</span>
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#00E6E6]">↑ {systemHealth.network.upload.toFixed(0)} KB/s</span>
-                              <span className="text-[#00E6E6]">↓ {systemHealth.network.download.toFixed(0)} KB/s</span>
-                            </div>
                           </div>
                         </div>
 
@@ -556,7 +564,7 @@ export default function Admin() {
                             <Users className="w-4 h-4 text-[#00E6E6]" />
                             <span className="text-sm font-medium text-gray-200">Active Connections</span>
                           </div>
-                          <span className="text-sm font-bold text-[#00E6E6]">{systemHealth.activeConnections}</span>
+                          <span className="text-sm font-bold text-[#00E6E6]">{overview?.systemHealth.activeConnections}</span>
                         </div>
 
                         {/* Uptime */}
@@ -565,7 +573,7 @@ export default function Admin() {
                             <Clock className="w-4 h-4 text-[#00E6E6]" />
                             <span className="text-sm font-medium text-gray-200">Uptime</span>
                           </div>
-                          <span className="text-sm text-[#00E6E6]">{systemHealth.uptime}</span>
+                          <span className="text-sm text-[#00E6E6]">{overview?.systemHealth.uptime}</span>
                         </div>
                       </CardContent>
                     </Card>
@@ -669,14 +677,10 @@ export default function Admin() {
                             <TableCell>{user.hourlyLimit}</TableCell>
                             <TableCell>{user.uploads}</TableCell>
                             <TableCell>
-                              <Button size="sm" className="bg-[#00E6E6] text-black mr-2">View</Button>
-                              <Button size="sm" variant="outline" className="border-[#00E6E6] text-[#00E6E6] mr-2">Edit</Button>
-                              {user.status === 'active' ? (
-                                <Button size="sm" variant="outline" className="border-red-400 text-red-400 mr-2">Suspend</Button>
-                              ) : (
-                                <Button size="sm" variant="outline" className="border-green-400 text-green-400 mr-2">Activate</Button>
-                              )}
-                              <Button size="sm" variant="outline" className="border-yellow-400 text-yellow-400">Reset API</Button>
+                              <Button onClick={() => handleViewUser(user)} size="sm" className="bg-[#00E6E6] text-black mr-2">View</Button>
+                              <Button onClick={() => handleEditUser(user)} size="sm" variant="outline" className="border-[#00E6E6] text-[#00E6E6] mr-2">Edit</Button>
+                              <Button onClick={() => handleSuspendUser(user)} size="sm" variant="outline" className="border-red-400 text-red-400 mr-2" disabled={apiLoading}>Suspend/Activate</Button>
+                              <Button onClick={() => handleResetApi(user)} size="sm" variant="outline" className="border-yellow-400 text-yellow-400" disabled={apiLoading}>Reset API</Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -954,6 +958,75 @@ export default function Admin() {
           </Tabs>
         </div>
       </main>
+
+      {/* User View Modal */}
+      <Dialog open={modalType === 'view'} onOpenChange={() => { setModalType(null); setSelectedUser(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-2">
+              <div><b>Username:</b> {selectedUser.username}</div>
+              <div><b>API Key:</b> {selectedUser.apiKey}</div>
+              <div><b>Status:</b> {selectedUser.status}</div>
+              <div><b>Daily Limit:</b> {selectedUser.dailyLimit}</div>
+              <div><b>Hourly Limit:</b> {selectedUser.hourlyLimit}</div>
+              <div><b>Uploads:</b> {selectedUser.uploads}</div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => { setModalType(null); setSelectedUser(null); }}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Edit Modal */}
+      <Dialog open={modalType === 'edit'} onOpenChange={() => { setModalType(null); setSelectedUser(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block mb-1">Username</label>
+                <Input name="username" defaultValue={selectedUser.username} required />
+              </div>
+              <div>
+                <label className="block mb-1">Daily Limit</label>
+                <Input name="dailyLimit" type="number" defaultValue={selectedUser.dailyLimit} required />
+              </div>
+              <div>
+                <label className="block mb-1">Hourly Limit</label>
+                <Input name="hourlyLimit" type="number" defaultValue={selectedUser.hourlyLimit} required />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => { setModalType(null); setSelectedUser(null); }}>Cancel</Button>
+                <Button type="submit" disabled={apiLoading}>{apiLoading ? 'Saving...' : 'Save'}</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset API Modal */}
+      <Dialog open={modalType === 'resetApi'} onOpenChange={() => { setModalType(null); setNewApiKey(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New API Key</DialogTitle>
+          </DialogHeader>
+          {newApiKey && (
+            <div className="space-y-2">
+              <div><b>API Key:</b> <span className="font-mono text-cyan-400">{newApiKey}</span></div>
+              <div className="text-sm text-gray-400">Copy and save this key. It will not be shown again.</div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => { setModalType(null); setNewApiKey(null); }}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
