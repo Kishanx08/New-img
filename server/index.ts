@@ -29,6 +29,7 @@ import {
   getUserDashboard,
   updateUserUsageForUpload,
   deleteUserImage,
+  adminRouter,
 } from "./routes/user-dashboard";
 import {
   handleSubdomainImages,
@@ -112,6 +113,9 @@ export function createServer() {
 
   // Image deletion endpoint (API key optional for user files)
   app.delete("/api/images/:filename", optionalApiKey, handleDeleteImage);
+
+  // Admin endpoints
+  app.use('/api/admin', adminRouter);
 
   // Only serve static files and SPA fallback in production
   if (process.env.NODE_ENV === "production") {

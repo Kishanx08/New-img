@@ -12,6 +12,7 @@ import ImageView from "./pages/ImageView";
 import NotFound from "./pages/NotFound";
 import GetKey from "./pages/GetKey";
 import Dashboard from "./pages/Dashboard";
+import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
@@ -86,6 +87,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <Admin />
               </ProtectedRoute>
             }
           />
