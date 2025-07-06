@@ -11,6 +11,7 @@ interface WatermarkSettings {
   color: string;
   padding: number;
   async?: boolean;
+  fastMode?: boolean;
 }
 
 const router = Router();
@@ -45,7 +46,8 @@ export const getWatermarkSettings: RequestHandler = async (req, res) => {
       fontSize: 20,
       color: '#ffffff',
       padding: 15,
-      async: false
+      async: false,
+      fastMode: false
     };
 
     res.json({ success: true, settings });
@@ -64,7 +66,7 @@ export const updateWatermarkSettings: RequestHandler = async (req, res) => {
   }
 
   try {
-    const { enabled, text, position, opacity, fontSize, color, padding, async } = req.body;
+    const { enabled, text, position, opacity, fontSize, color, padding, async, fastMode } = req.body;
     
     // Validate input
     if (typeof enabled !== 'boolean') {
@@ -99,6 +101,10 @@ export const updateWatermarkSettings: RequestHandler = async (req, res) => {
     if (async !== undefined && typeof async !== 'boolean') {
       return res.status(400).json({ error: "async must be a boolean" });
     }
+    
+    if (fastMode !== undefined && typeof fastMode !== 'boolean') {
+      return res.status(400).json({ error: "fastMode must be a boolean" });
+    }
 
     const usersFile = path.join("uploads", "users.json");
     if (!fs.existsSync(usersFile)) {
@@ -121,7 +127,8 @@ export const updateWatermarkSettings: RequestHandler = async (req, res) => {
       fontSize,
       color,
       padding,
-      async: async || false
+      async: async || false,
+      fastMode: fastMode || false
     };
 
     // Save updated users file

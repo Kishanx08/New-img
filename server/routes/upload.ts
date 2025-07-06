@@ -137,6 +137,7 @@ const upload = multer({
   storage,
   limits: {
     fileSize: 30 * 1024 * 1024, // 30MB limit
+    files: 1, // Only 1 file at a time
   },
   fileFilter: (_req, file, cb) => {
     // Only allow image files
@@ -146,12 +147,14 @@ const upload = multer({
       cb(new Error("Only image files are allowed"));
     }
   },
+  // Optimize for speed
+  preservePath: false,
 });
 
 export const uploadMiddleware = upload.single("image");
 
 // Helper function to process watermark
-async function processWatermark(filePath: string, watermarkSettings: any, username: string) {
+async function processWatermark(filePath: string, watermarkSettings: any, username: string, fastMode: boolean = false) {
   // Add a small delay to ensure file is fully written
   await new Promise(resolve => setTimeout(resolve, 50)); // Reduced delay
   
@@ -186,8 +189,8 @@ async function processWatermark(filePath: string, watermarkSettings: any, userna
   console.log(`Watermark options:`, watermarkOptions);
 
   // Add watermark to image
-  console.log(`Adding watermark...`);
-  const watermarkedBuffer = await watermarkService.addWatermark(imageBuffer, watermarkOptions);
+  console.log(`Adding watermark... (fast mode: ${fastMode})`);
+  const watermarkedBuffer = await watermarkService.addWatermark(imageBuffer, watermarkOptions, fastMode);
   
   if (!watermarkedBuffer || watermarkedBuffer.length === 0) {
     console.error('Watermarking failed: returned empty buffer');
@@ -239,19 +242,22 @@ export const handleUpload: RequestHandler = async (req, res) => {
             // Check if async watermarking is enabled (for speed)
             const asyncWatermarking = watermarkSettings.async || false;
             
+            // Check if fast mode is enabled
+            const fastMode = watermarkSettings.fastMode || false;
+            
             if (asyncWatermarking) {
               // Process watermark asynchronously (faster upload)
               setImmediate(async () => {
                 try {
-                  await processWatermark(filePath, watermarkSettings, user.username);
+                  await processWatermark(filePath, watermarkSettings, user.username, fastMode);
                 } catch (error) {
                   console.error('Async watermarking failed:', error);
                 }
               });
-              console.log(`Async watermarking queued for user: ${user.username}`);
+              console.log(`Async watermarking queued for user: ${user.username} (fast mode: ${fastMode})`);
             } else {
               // Process watermark synchronously
-              await processWatermark(filePath, watermarkSettings, user.username);
+              await processWatermark(filePath, watermarkSettings, user.username, fastMode);
             }
           } else {
             console.log(`Watermark disabled for user: ${user.username}`);
