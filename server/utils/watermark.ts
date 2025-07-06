@@ -56,20 +56,15 @@ export class WatermarkService {
       console.log(`Image metadata:`, metadata);
       const { width = 800, height = 600 } = metadata;
 
-      // Create watermark canvas
-      const canvas = createCanvas(width, height);
+      // Calculate text dimensions
+      const canvas = createCanvas(1, 1); // Temporary canvas for text measurement
       const ctx = canvas.getContext('2d');
-
-      // Set font
       ctx.font = `${options.fontSize}px Inter-Bold, Arial, sans-serif`;
-      ctx.fillStyle = options.color;
-      ctx.globalAlpha = options.opacity;
-
-      // Calculate text position
       const textMetrics = ctx.measureText(options.text);
       const textWidth = textMetrics.width;
       const textHeight = options.fontSize;
 
+      // Calculate watermark position
       let x: number, y: number;
 
       switch (options.position) {
@@ -98,17 +93,25 @@ export class WatermarkService {
           y = height - options.padding;
       }
 
-      // Add text shadow for better visibility
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-      ctx.shadowBlur = 4;
-      ctx.shadowOffsetX = 2;
-      ctx.shadowOffsetY = 2;
-
-      // Draw watermark text
-      ctx.fillText(options.text, x, y);
-
-      // Convert canvas to buffer
-      const watermarkBuffer = canvas.toBuffer('image/png');
+      // Create watermark using Sharp's text overlay
+      const watermarkSvg = `
+        <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="2" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.8)"/>
+            </filter>
+          </defs>
+          <text 
+            x="${x}" 
+            y="${y}" 
+            font-family="Inter-Bold, Arial, sans-serif" 
+            font-size="${options.fontSize}" 
+            fill="${options.color}" 
+            opacity="${options.opacity}"
+            filter="url(#shadow)"
+          >${options.text}</text>
+        </svg>
+      `;
 
       // Composite watermark onto original image with optimized settings
       const sharpInstance = sharp(imageBuffer, { 
@@ -131,7 +134,7 @@ export class WatermarkService {
       const watermarkedImage = await sharpInstance
         .composite([
           {
-            input: watermarkBuffer,
+            input: Buffer.from(watermarkSvg),
             top: 0,
             left: 0,
           }
