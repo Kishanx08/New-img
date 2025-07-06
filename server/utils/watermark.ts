@@ -42,8 +42,17 @@ export class WatermarkService {
     }
   ): Promise<Buffer> {
     try {
+      // Validate input
+      if (!imageBuffer || imageBuffer.length === 0) {
+        console.error('Invalid image buffer: buffer is empty or null');
+        throw new Error('Invalid image buffer');
+      }
+      
+      console.log(`Watermarking image: ${imageBuffer.length} bytes`);
+      
       // Get image metadata
       const metadata = await sharp(imageBuffer).metadata();
+      console.log(`Image metadata:`, metadata);
       const { width = 800, height = 600 } = metadata;
 
       // Create watermark canvas
@@ -100,8 +109,11 @@ export class WatermarkService {
       // Convert canvas to buffer
       const watermarkBuffer = canvas.toBuffer('image/png');
 
-      // Composite watermark onto original image
-      const watermarkedImage = await sharp(imageBuffer)
+      // Composite watermark onto original image with optimized settings
+      const watermarkedImage = await sharp(imageBuffer, { 
+        failOnError: false,
+        limitInputPixels: false 
+      })
         .composite([
           {
             input: watermarkBuffer,
@@ -109,7 +121,11 @@ export class WatermarkService {
             left: 0,
           }
         ])
-        .png({ quality: 90 })
+        .png({ 
+          quality: 85,  // Slightly lower quality for speed
+          compressionLevel: 6,  // Faster compression
+          progressive: false  // Disable progressive for speed
+        })
         .toBuffer();
 
       return watermarkedImage;

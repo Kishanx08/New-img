@@ -10,6 +10,7 @@ interface WatermarkSettings {
   fontSize: number;
   color: string;
   padding: number;
+  async?: boolean;
 }
 
 const router = Router();
@@ -43,7 +44,8 @@ export const getWatermarkSettings: RequestHandler = async (req, res) => {
       opacity: 0.6,
       fontSize: 20,
       color: '#ffffff',
-      padding: 15
+      padding: 15,
+      async: false
     };
 
     res.json({ success: true, settings });
@@ -62,7 +64,7 @@ export const updateWatermarkSettings: RequestHandler = async (req, res) => {
   }
 
   try {
-    const { enabled, text, position, opacity, fontSize, color, padding } = req.body;
+    const { enabled, text, position, opacity, fontSize, color, padding, async } = req.body;
     
     // Validate input
     if (typeof enabled !== 'boolean') {
@@ -93,6 +95,10 @@ export const updateWatermarkSettings: RequestHandler = async (req, res) => {
     if (typeof padding !== 'number' || padding < 0 || padding > 100) {
       return res.status(400).json({ error: "padding must be a number between 0 and 100" });
     }
+    
+    if (async !== undefined && typeof async !== 'boolean') {
+      return res.status(400).json({ error: "async must be a boolean" });
+    }
 
     const usersFile = path.join("uploads", "users.json");
     if (!fs.existsSync(usersFile)) {
@@ -114,7 +120,8 @@ export const updateWatermarkSettings: RequestHandler = async (req, res) => {
       opacity,
       fontSize,
       color,
-      padding
+      padding,
+      async: async || false
     };
 
     // Save updated users file

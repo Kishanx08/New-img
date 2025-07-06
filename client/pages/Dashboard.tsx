@@ -216,9 +216,10 @@ function DashboardContent() {
     const [watermarkPosition, setWatermarkPosition] = useState('bottom-right');
     const [watermarkOpacity, setWatermarkOpacity] = useState(0.6);
     const [watermarkFontSize, setWatermarkFontSize] = useState(20);
-    const [watermarkColor, setWatermarkColor] = useState('#ffffff');
-    const [watermarkPadding, setWatermarkPadding] = useState(15);
-    const [loading, setLoading] = useState(false);
+      const [watermarkColor, setWatermarkColor] = useState('#ffffff');
+  const [watermarkPadding, setWatermarkPadding] = useState(15);
+  const [asyncWatermarking, setAsyncWatermarking] = useState(false);
+  const [loading, setLoading] = useState(false);
 
     // Load current settings on component mount
     useEffect(() => {
@@ -244,6 +245,7 @@ function DashboardContent() {
               setWatermarkFontSize(result.settings.fontSize);
               setWatermarkColor(result.settings.color);
               setWatermarkPadding(result.settings.padding);
+              setAsyncWatermarking(result.settings.async || false);
             }
           }
         } catch (error) {
@@ -275,6 +277,7 @@ function DashboardContent() {
             fontSize: watermarkFontSize,
             color: watermarkColor,
             padding: watermarkPadding,
+            async: asyncWatermarking,
           }),
         });
 
@@ -391,6 +394,20 @@ function DashboardContent() {
                   className="w-full"
                 />
               </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={asyncWatermarking}
+                  onCheckedChange={setAsyncWatermarking}
+                />
+                <Label className={theme.text}>Fast upload (async watermarking)</Label>
+              </div>
+              
+              {asyncWatermarking && (
+                <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
+                  ⚡ Images will upload instantly, then get watermarked in the background
+                </div>
+              )}
             </>
           )}
           
