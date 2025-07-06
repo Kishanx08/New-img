@@ -4,6 +4,11 @@ import path from "path";
 import { User } from "@shared/auth-types";
 import express from 'express';
 import crypto from 'crypto';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const USERS_FILE = path.join("uploads", "users.json");
 
