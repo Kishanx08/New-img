@@ -366,6 +366,7 @@ adminRouter.get('/alerts', (_req, res) => {
     alerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     res.json({ success: true, alerts });
   } catch (error) {
+    console.error('Alerts endpoint error:', error);
     res.status(500).json({ success: false, error: 'Failed to load alerts' });
   }
 });
@@ -390,6 +391,7 @@ adminRouter.get('/analytics', (_req, res) => {
     }
     res.json({ success: true, analytics });
   } catch (error) {
+    console.error('Analytics endpoint error:', error);
     res.status(500).json({ success: false, error: 'Failed to load analytics' });
   }
 });
@@ -416,6 +418,7 @@ adminRouter.get('/performance', (_req, res) => {
     }
     res.json({ success: true, performance });
   } catch (error) {
+    console.error('Performance endpoint error:', error);
     res.status(500).json({ success: false, error: 'Failed to load performance data' });
   }
 });
