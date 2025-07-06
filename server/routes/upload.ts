@@ -8,6 +8,7 @@ import {
   ErrorResponse,
   DeleteImageResponse,
 } from "@shared/api";
+import { WatermarkService } from "../utils/watermark";
 
 // Simple uploads directory in project root
 const uploadsDir = "uploads";
@@ -149,12 +150,67 @@ const upload = multer({
 
 export const uploadMiddleware = upload.single("image");
 
-export const handleUpload: RequestHandler = (req, res) => {
+export const handleUpload: RequestHandler = async (req, res) => {
   if (!req.file) {
     return res.status(400).send("No image file provided");
   }
 
   const apiKey = req.headers["x-api-key"] as string;
+  let imageBuffer = req.file.buffer;
+  let finalFilename = req.file.filename;
+
+  // Add watermark for registered users
+  if (apiKey) {
+    try {
+      const usersFile = path.join(uploadsDir, "users.json");
+      if (fs.existsSync(usersFile)) {
+        const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
+        const user = users.find((u: any) => u.apiKey === apiKey);
+        
+        if (user) {
+          // Check if user has watermark settings and if watermarking is enabled
+          const watermarkSettings = user.watermarkSettings || {
+            enabled: true,
+            text: 'x02.me',
+            position: 'bottom-right',
+            opacity: 0.6,
+            fontSize: 20,
+            color: '#ffffff',
+            padding: 15
+          };
+
+          if (watermarkSettings.enabled) {
+            // Add watermark for registered users
+            const watermarkService = WatermarkService.getInstance();
+            
+            // Use user's custom settings
+            const watermarkOptions = {
+              text: watermarkSettings.text,
+              position: watermarkSettings.position,
+              opacity: watermarkSettings.opacity,
+              fontSize: watermarkSettings.fontSize,
+              color: watermarkSettings.color,
+              padding: watermarkSettings.padding
+            };
+
+            // Add watermark to image
+            imageBuffer = await watermarkService.addWatermark(imageBuffer, watermarkOptions);
+            
+            // Save watermarked image
+            const watermarkedPath = path.join(req.file.destination, finalFilename);
+            fs.writeFileSync(watermarkedPath, imageBuffer);
+            
+            console.log(`Watermark added for user: ${user.username} with text: "${watermarkSettings.text}"`);
+          } else {
+            console.log(`Watermark disabled for user: ${user.username}`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Watermarking error:', error);
+      // Continue without watermark if there's an error
+    }
+  }
 
   // Generate the correct URL based on whether user has API key
   let imageUrl: string;
@@ -166,18 +222,18 @@ export const handleUpload: RequestHandler = (req, res) => {
         const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
         const user = users.find((u: any) => u.apiKey === apiKey);
         if (user) {
-          imageUrl = `https://${user.username.toLowerCase()}.x02.me/api/images/${req.file.filename}`;
+          imageUrl = `https://${user.username.toLowerCase()}.x02.me/api/images/${finalFilename}`;
         } else {
-          imageUrl = `https://x02.me/api/images/${req.file.filename}`;
+          imageUrl = `https://x02.me/api/images/${finalFilename}`;
         }
       } catch (error) {
-        imageUrl = `https://x02.me/api/images/${req.file.filename}`;
+        imageUrl = `https://x02.me/api/images/${finalFilename}`;
       }
     } else {
-      imageUrl = `https://x02.me/api/images/${req.file.filename}`;
+      imageUrl = `https://x02.me/api/images/${finalFilename}`;
     }
   } else {
-    imageUrl = `https://x02.me/api/images/${req.file.filename}`;
+    imageUrl = `https://x02.me/api/images/${finalFilename}`;
   }
 
   // Track the upload with API key usage
@@ -193,7 +249,7 @@ export const handleUpload: RequestHandler = (req, res) => {
           "x-api-key": apiKey,
         },
         body: JSON.stringify({
-          filename: req.file.filename,
+          filename: finalFilename,
           size: req.file.size,
         }),
       }).catch((err) => console.log("Usage update failed:", err));

@@ -34,6 +34,7 @@ import {
   handleSubdomainImages,
   listSubdomainImages,
 } from "./routes/subdomain-images";
+import watermarkSettingsRouter from "./routes/watermark-settings";
 
 export function createServer() {
   const app = express();
@@ -69,6 +70,9 @@ export function createServer() {
   app.get("/api/user/dashboard", validateApiKey, getUserDashboard);
   app.post("/api/user/usage", validateApiKey, updateUserUsageForUpload);
   app.delete("/api/user/images/:filename", validateApiKey, deleteUserImage);
+
+  // Watermark settings management
+  app.use("/api/user/watermark", validateApiKey, watermarkSettingsRouter);
 
   // API Key management endpoints (deprecated but kept for backward compatibility)
   app.post("/api/keys/generate", generateApiKey);

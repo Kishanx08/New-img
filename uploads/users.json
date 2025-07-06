@@ -27,7 +27,8 @@
       "hourlyLimit": 25
     },
     "usage": {
-      "count": 0
+      "count": 1,
+      "lastUsed": "2025-07-06T17:29:04.226Z"
     },
     "uploadsFolder": "uploads\\users\\Kishan"
   }

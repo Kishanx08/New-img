@@ -12,10 +12,21 @@ import {
   Activity,
   Database,
   Download,
+  Image,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -196,6 +207,203 @@ function DashboardContent() {
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString();
+  };
+
+  // Watermark Settings Component
+  const WatermarkSettings = () => {
+    const [watermarkEnabled, setWatermarkEnabled] = useState(true);
+    const [watermarkText, setWatermarkText] = useState('x02.me');
+    const [watermarkPosition, setWatermarkPosition] = useState('bottom-right');
+    const [watermarkOpacity, setWatermarkOpacity] = useState(0.6);
+    const [watermarkFontSize, setWatermarkFontSize] = useState(20);
+    const [watermarkColor, setWatermarkColor] = useState('#ffffff');
+    const [watermarkPadding, setWatermarkPadding] = useState(15);
+    const [loading, setLoading] = useState(false);
+
+    // Load current settings on component mount
+    useEffect(() => {
+      const loadSettings = async () => {
+        if (!userSession || userSession.isAnonymous || !("apiKey" in userSession)) {
+          return;
+        }
+
+        try {
+          const response = await fetch('/api/user/watermark/settings', {
+            headers: {
+              'x-api-key': userSession.apiKey,
+            },
+          });
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.settings) {
+              setWatermarkEnabled(result.settings.enabled);
+              setWatermarkText(result.settings.text);
+              setWatermarkPosition(result.settings.position);
+              setWatermarkOpacity(result.settings.opacity);
+              setWatermarkFontSize(result.settings.fontSize);
+              setWatermarkColor(result.settings.color);
+              setWatermarkPadding(result.settings.padding);
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load watermark settings:', error);
+        }
+      };
+
+      loadSettings();
+    }, [userSession]);
+
+    const updateWatermarkSettings = async () => {
+      if (!userSession || userSession.isAnonymous || !("apiKey" in userSession)) {
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const response = await fetch('/api/user/watermark/settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': userSession.apiKey,
+          },
+          body: JSON.stringify({
+            enabled: watermarkEnabled,
+            text: watermarkText,
+            position: watermarkPosition,
+            opacity: watermarkOpacity,
+            fontSize: watermarkFontSize,
+            color: watermarkColor,
+            padding: watermarkPadding,
+          }),
+        });
+
+        if (response.ok) {
+          toast({
+            title: "Settings Updated",
+            description: "Watermark settings have been saved.",
+          });
+        } else {
+          const error = await response.json();
+          toast({
+            title: "Error",
+            description: error.error || "Failed to update watermark settings.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update watermark settings.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return (
+      <Card className={`${theme.card} backdrop-blur-md border`}>
+        <CardHeader>
+          <CardTitle className={`flex items-center gap-2 ${theme.accent}`}>
+            <Image className="w-5 h-5" />
+            Watermark Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center space-x-2">
+            <Switch
+              checked={watermarkEnabled}
+              onCheckedChange={setWatermarkEnabled}
+            />
+            <Label className={theme.text}>Enable watermark on uploads</Label>
+          </div>
+          
+          {watermarkEnabled && (
+            <>
+              <div className="space-y-2">
+                <Label className={theme.text}>Watermark Text</Label>
+                <Input
+                  value={watermarkText}
+                  onChange={(e) => setWatermarkText(e.target.value)}
+                  placeholder="x02.me"
+                  className={`${theme.input} border`}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className={theme.text}>Position</Label>
+                <Select value={watermarkPosition} onValueChange={setWatermarkPosition}>
+                  <SelectTrigger className={`${theme.input} border`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="top-left">Top Left</SelectItem>
+                    <SelectItem value="top-right">Top Right</SelectItem>
+                    <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                    <SelectItem value="bottom-right">Bottom Right</SelectItem>
+                    <SelectItem value="center">Center</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className={theme.text}>Opacity: {Math.round(watermarkOpacity * 100)}%</Label>
+                <Slider
+                  value={[watermarkOpacity * 100]}
+                  onValueChange={([value]) => setWatermarkOpacity(value / 100)}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className={theme.text}>Font Size: {watermarkFontSize}px</Label>
+                <Slider
+                  value={[watermarkFontSize]}
+                  onValueChange={([value]) => setWatermarkFontSize(value)}
+                  min={8}
+                  max={100}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className={theme.text}>Color</Label>
+                <Input
+                  type="color"
+                  value={watermarkColor}
+                  onChange={(e) => setWatermarkColor(e.target.value)}
+                  className="w-20 h-10 p-1 border rounded"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className={theme.text}>Padding: {watermarkPadding}px</Label>
+                <Slider
+                  value={[watermarkPadding]}
+                  onValueChange={([value]) => setWatermarkPadding(value)}
+                  min={0}
+                  max={100}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+            </>
+          )}
+          
+          <Button 
+            onClick={updateWatermarkSettings} 
+            disabled={loading}
+            className={`${theme.button} w-full`}
+          >
+            {loading ? 'Saving...' : 'Save Settings'}
+          </Button>
+        </CardContent>
+      </Card>
+    );
   };
 
   if (!userSession || userSession.isAnonymous) {
@@ -544,6 +752,11 @@ function DashboardContent() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Watermark Settings */}
+        <div className="mb-8">
+          <WatermarkSettings />
         </div>
 
         {/* Uploads History */}
