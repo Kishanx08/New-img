@@ -24,3 +24,15 @@ dist-ssr
 *.sw?
 
 .config/
+
+# Database files (runtime data)
+uploads/users.json
+uploads/analytics.json
+uploads/rate-limits.json
+uploads/usage-stats.json
+uploads/api-keys.json
+uploads/shortlinks.json
+
+# User uploads (keep folder structure but ignore files)
+uploads/users/*/
+!uploads/users/*/.gitkeep

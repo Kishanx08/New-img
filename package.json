@@ -21,7 +21,8 @@
     "test": "vitest --run",
     "test-api": "node test-api.js",
     "format.fix": "prettier --write .",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "init-db": "node scripts/init-db.js"
   },
   "dependencies": {
     "@types/bcrypt": "^5.0.2",

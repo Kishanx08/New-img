@@ -1,0 +1,2 @@
+# This file ensures the users directory is tracked in git
+# The actual user files are ignored via .gitignore 
