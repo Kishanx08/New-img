@@ -44,10 +44,19 @@
       "hourlyLimit": 25
     },
     "usage": {
-      "count": 2,
-      "lastUsed": "2025-07-05T07:30:17.653Z"
+      "count": 5,
+      "lastUsed": "2025-07-06T18:00:34.550Z"
     },
-    "uploadsFolder": "uploads/users/testuser"
+    "uploadsFolder": "uploads/users/testuser",
+    "watermarkSettings": {
+      "enabled": true,
+      "text": "x02.me",
+      "position": "bottom-right",
+      "opacity": 0.6,
+      "fontSize": 20,
+      "color": "#ffffff",
+      "padding": 15
+    }
   },
   {
     "id": "2d18bf47-9daf-4cdb-99bf-c46d10a9724d",

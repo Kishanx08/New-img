@@ -150,13 +150,64 @@ const upload = multer({
 
 export const uploadMiddleware = upload.single("image");
 
+// Helper function to process watermark
+async function processWatermark(filePath: string, watermarkSettings: any, username: string) {
+  // Add a small delay to ensure file is fully written
+  await new Promise(resolve => setTimeout(resolve, 50)); // Reduced delay
+  
+  // Check if file exists
+  if (!fs.existsSync(filePath)) {
+    console.error(`File does not exist: ${filePath}`);
+    throw new Error('Uploaded file not found');
+  }
+  
+  const imageBuffer = fs.readFileSync(filePath);
+  console.log(`File size: ${imageBuffer.length} bytes`);
+  
+  // Check if buffer is valid
+  if (!imageBuffer || imageBuffer.length === 0) {
+    console.error('Read empty file buffer');
+    throw new Error('Empty file buffer');
+  }
+  
+  // Add watermark for registered users
+  const watermarkService = WatermarkService.getInstance();
+  
+  // Use user's custom settings
+  const watermarkOptions = {
+    text: watermarkSettings.text,
+    position: watermarkSettings.position,
+    opacity: watermarkSettings.opacity,
+    fontSize: watermarkSettings.fontSize,
+    color: watermarkSettings.color,
+    padding: watermarkSettings.padding
+  };
+  
+  console.log(`Watermark options:`, watermarkOptions);
+
+  // Add watermark to image
+  console.log(`Adding watermark...`);
+  const watermarkedBuffer = await watermarkService.addWatermark(imageBuffer, watermarkOptions);
+  
+  if (!watermarkedBuffer || watermarkedBuffer.length === 0) {
+    console.error('Watermarking failed: returned empty buffer');
+    throw new Error('Watermarking failed');
+  }
+  
+  console.log(`Watermarked file size: ${watermarkedBuffer.length} bytes`);
+  
+  // Save watermarked image (overwrite the original)
+  fs.writeFileSync(filePath, watermarkedBuffer);
+  
+  console.log(`Watermark added for user: ${username} with text: "${watermarkSettings.text}"`);
+}
+
 export const handleUpload: RequestHandler = async (req, res) => {
   if (!req.file) {
     return res.status(400).send("No image file provided");
   }
 
   const apiKey = req.headers["x-api-key"] as string;
-  let imageBuffer = req.file.buffer;
   let finalFilename = req.file.filename;
 
   // Add watermark for registered users
@@ -180,27 +231,28 @@ export const handleUpload: RequestHandler = async (req, res) => {
           };
 
           if (watermarkSettings.enabled) {
-            // Add watermark for registered users
-            const watermarkService = WatermarkService.getInstance();
+            console.log(`Processing watermark for user: ${user.username}`);
             
-            // Use user's custom settings
-            const watermarkOptions = {
-              text: watermarkSettings.text,
-              position: watermarkSettings.position,
-              opacity: watermarkSettings.opacity,
-              fontSize: watermarkSettings.fontSize,
-              color: watermarkSettings.color,
-              padding: watermarkSettings.padding
-            };
-
-            // Add watermark to image
-            imageBuffer = await watermarkService.addWatermark(imageBuffer, watermarkOptions);
+            // Get the file path
+            const filePath = path.join(req.file.destination, req.file.filename);
             
-            // Save watermarked image
-            const watermarkedPath = path.join(req.file.destination, finalFilename);
-            fs.writeFileSync(watermarkedPath, imageBuffer);
+            // Check if async watermarking is enabled (for speed)
+            const asyncWatermarking = watermarkSettings.async || false;
             
-            console.log(`Watermark added for user: ${user.username} with text: "${watermarkSettings.text}"`);
+            if (asyncWatermarking) {
+              // Process watermark asynchronously (faster upload)
+              setImmediate(async () => {
+                try {
+                  await processWatermark(filePath, watermarkSettings, user.username);
+                } catch (error) {
+                  console.error('Async watermarking failed:', error);
+                }
+              });
+              console.log(`Async watermarking queued for user: ${user.username}`);
+            } else {
+              // Process watermark synchronously
+              await processWatermark(filePath, watermarkSettings, user.username);
+            }
           } else {
             console.log(`Watermark disabled for user: ${user.username}`);
           }
@@ -208,6 +260,8 @@ export const handleUpload: RequestHandler = async (req, res) => {
       }
     } catch (error) {
       console.error('Watermarking error:', error);
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
       // Continue without watermark if there's an error
     }
   }
