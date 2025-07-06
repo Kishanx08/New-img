@@ -477,7 +477,6 @@ adminRouter.get('/overview', (_req, res) => {
       cpu,
       memory,
       disk: 10 + Math.random() * 60, // mock disk usage %
-      network: { upload: Math.floor(Math.random() * 1000), download: Math.floor(Math.random() * 1000) },
       activeConnections: Math.floor(Math.random() * 50),
       uptime,
     };

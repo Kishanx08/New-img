@@ -11,6 +11,8 @@ import {
   ChartLegend,
 } from '@/components/ui/chart';
 import * as RechartsPrimitive from 'recharts';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { useToast } from '@/components/ui/use-toast';
 
 import { 
   Activity, 
@@ -106,6 +108,11 @@ export default function Admin() {
   const [overview, setOverview] = useState<any>(null);
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewError, setOverviewError] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [modalType, setModalType] = useState<'view' | 'edit' | 'resetApi' | null>(null);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [newApiKey, setNewApiKey] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Fetch real user data for Users tab
   useEffect(() => {
@@ -272,6 +279,83 @@ export default function Admin() {
       case 'error': return 'bg-red-500 text-white';
       default: return 'bg-blue-500 text-white';
     }
+  };
+
+  // User action handlers
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setModalType('view');
+  };
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setModalType('edit');
+  };
+  const handleSuspendUser = async (user: User) => {
+    setApiLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: user.status === 'active' ? 'suspended' : 'active' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: `User ${user.status === 'active' ? 'suspended' : 'activated'} successfully` });
+        // Refresh users
+        setTab('users');
+      } else {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to update user status', variant: 'destructive' });
+    }
+    setApiLoading(false);
+  };
+  const handleResetApi = async (user: User) => {
+    setApiLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/reset-api`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        setNewApiKey(data.apiKey);
+        setModalType('resetApi');
+        toast({ title: 'API Key Reset', description: 'New API key generated.' });
+      } else {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to reset API key', variant: 'destructive' });
+    }
+    setApiLoading(false);
+  };
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser) return;
+    setApiLoading(true);
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const username = formData.get('username');
+    const dailyLimit = formData.get('dailyLimit');
+    const hourlyLimit = formData.get('hourlyLimit');
+    try {
+      const res = await fetch(`/api/admin/users/${selectedUser.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, dailyLimit: Number(dailyLimit), hourlyLimit: Number(hourlyLimit) })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: 'User updated successfully' });
+        setModalType(null);
+        setSelectedUser(null);
+        setTab('users');
+      } else {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to update user', variant: 'destructive' });
+    }
+    setApiLoading(false);
   };
 
   return (
@@ -474,22 +558,6 @@ export default function Admin() {
                           </div>
                         </div>
 
-                        {/* Network */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-2">
-                              <Network className="w-4 h-4 text-[#00E6E6]" />
-                              <span className="text-sm font-medium text-gray-200">Network</span>
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#00E6E6]">↑ {overview?.systemHealth.network.upload.toFixed(0)} KB/s</span>
-                              <span className="text-[#00E6E6]">↓ {overview?.systemHealth.network.download.toFixed(0)} KB/s</span>
-                            </div>
-                          </div>
-                        </div>
-
                         {/* Active Connections */}
                         <div className="flex items-center justify-between pt-2 border-t border-[#222]">
                           <div className="flex items-center space-x-2">
@@ -609,14 +677,10 @@ export default function Admin() {
                             <TableCell>{user.hourlyLimit}</TableCell>
                             <TableCell>{user.uploads}</TableCell>
                             <TableCell>
-                              <Button size="sm" className="bg-[#00E6E6] text-black mr-2">View</Button>
-                              <Button size="sm" variant="outline" className="border-[#00E6E6] text-[#00E6E6] mr-2">Edit</Button>
-                              {user.status === 'active' ? (
-                                <Button size="sm" variant="outline" className="border-red-400 text-red-400 mr-2">Suspend</Button>
-                              ) : (
-                                <Button size="sm" variant="outline" className="border-green-400 text-green-400 mr-2">Activate</Button>
-                              )}
-                              <Button size="sm" variant="outline" className="border-yellow-400 text-yellow-400">Reset API</Button>
+                              <Button onClick={() => handleViewUser(user)} size="sm" className="bg-[#00E6E6] text-black mr-2">View</Button>
+                              <Button onClick={() => handleEditUser(user)} size="sm" variant="outline" className="border-[#00E6E6] text-[#00E6E6] mr-2">Edit</Button>
+                              <Button onClick={() => handleSuspendUser(user)} size="sm" variant="outline" className="border-red-400 text-red-400 mr-2" disabled={apiLoading}>Suspend/Activate</Button>
+                              <Button onClick={() => handleResetApi(user)} size="sm" variant="outline" className="border-yellow-400 text-yellow-400" disabled={apiLoading}>Reset API</Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -894,6 +958,75 @@ export default function Admin() {
           </Tabs>
         </div>
       </main>
+
+      {/* User View Modal */}
+      <Dialog open={modalType === 'view'} onOpenChange={() => { setModalType(null); setSelectedUser(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-2">
+              <div><b>Username:</b> {selectedUser.username}</div>
+              <div><b>API Key:</b> {selectedUser.apiKey}</div>
+              <div><b>Status:</b> {selectedUser.status}</div>
+              <div><b>Daily Limit:</b> {selectedUser.dailyLimit}</div>
+              <div><b>Hourly Limit:</b> {selectedUser.hourlyLimit}</div>
+              <div><b>Uploads:</b> {selectedUser.uploads}</div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => { setModalType(null); setSelectedUser(null); }}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* User Edit Modal */}
+      <Dialog open={modalType === 'edit'} onOpenChange={() => { setModalType(null); setSelectedUser(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block mb-1">Username</label>
+                <Input name="username" defaultValue={selectedUser.username} required />
+              </div>
+              <div>
+                <label className="block mb-1">Daily Limit</label>
+                <Input name="dailyLimit" type="number" defaultValue={selectedUser.dailyLimit} required />
+              </div>
+              <div>
+                <label className="block mb-1">Hourly Limit</label>
+                <Input name="hourlyLimit" type="number" defaultValue={selectedUser.hourlyLimit} required />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => { setModalType(null); setSelectedUser(null); }}>Cancel</Button>
+                <Button type="submit" disabled={apiLoading}>{apiLoading ? 'Saving...' : 'Save'}</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset API Modal */}
+      <Dialog open={modalType === 'resetApi'} onOpenChange={() => { setModalType(null); setNewApiKey(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New API Key</DialogTitle>
+          </DialogHeader>
+          {newApiKey && (
+            <div className="space-y-2">
+              <div><b>API Key:</b> <span className="font-mono text-cyan-400">{newApiKey}</span></div>
+              <div className="text-sm text-gray-400">Copy and save this key. It will not be shown again.</div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => { setModalType(null); setNewApiKey(null); }}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 } 
