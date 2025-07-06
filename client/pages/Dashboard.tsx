@@ -219,6 +219,7 @@ function DashboardContent() {
       const [watermarkColor, setWatermarkColor] = useState('#ffffff');
   const [watermarkPadding, setWatermarkPadding] = useState(15);
   const [asyncWatermarking, setAsyncWatermarking] = useState(false);
+  const [fastMode, setFastMode] = useState(false);
   const [loading, setLoading] = useState(false);
 
     // Load current settings on component mount
@@ -246,6 +247,7 @@ function DashboardContent() {
               setWatermarkColor(result.settings.color);
               setWatermarkPadding(result.settings.padding);
               setAsyncWatermarking(result.settings.async || false);
+              setFastMode(result.settings.fastMode || false);
             }
           }
         } catch (error) {
@@ -278,6 +280,7 @@ function DashboardContent() {
             color: watermarkColor,
             padding: watermarkPadding,
             async: asyncWatermarking,
+            fastMode: fastMode,
           }),
         });
 
@@ -406,6 +409,20 @@ function DashboardContent() {
               {asyncWatermarking && (
                 <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
                   ⚡ Images will upload instantly, then get watermarked in the background
+                </div>
+              )}
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={fastMode}
+                  onCheckedChange={setFastMode}
+                />
+                <Label className={theme.text}>Ultra-fast processing</Label>
+              </div>
+              
+              {fastMode && (
+                <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
+                  🚀 Large images will be resized and compressed for maximum speed
                 </div>
               )}
             </>

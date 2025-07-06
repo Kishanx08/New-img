@@ -39,7 +39,8 @@ export class WatermarkService {
       fontSize: 24,
       color: '#ffffff',
       padding: 20
-    }
+    },
+    fastMode: boolean = false
   ): Promise<Buffer> {
     try {
       // Validate input
@@ -110,10 +111,24 @@ export class WatermarkService {
       const watermarkBuffer = canvas.toBuffer('image/png');
 
       // Composite watermark onto original image with optimized settings
-      const watermarkedImage = await sharp(imageBuffer, { 
+      const sharpInstance = sharp(imageBuffer, { 
         failOnError: false,
         limitInputPixels: false 
-      })
+      });
+
+      // Apply fast mode optimizations
+      if (fastMode) {
+        // Resize large images for faster processing
+        const metadata = await sharpInstance.metadata();
+        if (metadata.width && metadata.width > 2000) {
+          sharpInstance.resize(2000, null, { 
+            withoutEnlargement: true,
+            fit: 'inside'
+          });
+        }
+      }
+
+      const watermarkedImage = await sharpInstance
         .composite([
           {
             input: watermarkBuffer,
@@ -122,9 +137,10 @@ export class WatermarkService {
           }
         ])
         .png({ 
-          quality: 85,  // Slightly lower quality for speed
-          compressionLevel: 6,  // Faster compression
-          progressive: false  // Disable progressive for speed
+          quality: fastMode ? 80 : 85,  // Lower quality in fast mode
+          compressionLevel: fastMode ? 8 : 6,  // Faster compression in fast mode
+          progressive: false,  // Disable progressive for speed
+          force: true
         })
         .toBuffer();
 
