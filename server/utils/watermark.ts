@@ -93,6 +93,16 @@ export class WatermarkService {
           y = height - options.padding;
       }
 
+      // Debug: Log the options being used
+      console.log('🔍 Watermark options received:', {
+        text: options.text,
+        fontSize: options.fontSize,
+        color: options.color,
+        opacity: options.opacity,
+        position: options.position,
+        padding: options.padding
+      });
+
       // Create watermark using Sharp's text overlay
       const watermarkSvg = `
         <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
@@ -105,13 +115,16 @@ export class WatermarkService {
             x="${x}" 
             y="${y}" 
             font-family="Inter-Bold, Arial, sans-serif" 
-            font-size="${options.fontSize}" 
+            font-size="${options.fontSize}px" 
             fill="${options.color}" 
             opacity="${options.opacity}"
             filter="url(#shadow)"
+            style="font-weight: bold;"
           >${options.text}</text>
         </svg>
       `;
+
+      console.log('🔍 Generated SVG watermark:', watermarkSvg);
 
       // Composite watermark onto original image with optimized settings
       const sharpInstance = sharp(imageBuffer, { 

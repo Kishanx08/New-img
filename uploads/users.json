@@ -13,7 +13,18 @@
     "usage": {
       "count": 0
     },
-    "uploadsFolder": "uploads\\users\\Root"
+    "uploadsFolder": "uploads\\users\\Root",
+    "watermarkSettings": {
+      "enabled": true,
+      "text": "TEST WATERMARK",
+      "position": "center",
+      "opacity": 0.9,
+      "fontSize": 32,
+      "color": "#ff0000",
+      "padding": 25,
+      "async": true,
+      "fastMode": true
+    }
   },
   {
     "id": "7f492a6f-6853-4bd3-b89f-1a7716fb4583",
@@ -30,6 +41,7 @@
       "count": 41,
       "lastUsed": "2025-07-06T14:47:20.995Z"
     },
+<<<<<<< HEAD
     "uploadsFolder": "uploads\\users\\Kishan"
   },
   {
@@ -74,5 +86,17 @@
       "lastUsed": "2025-07-06T14:19:24.366Z"
     },
     "uploadsFolder": "uploads/users/harry"
+=======
+    "uploadsFolder": "uploads\\users\\Kishan",
+    "watermarkSettings": {
+      "enabled": true,
+      "text": "KISHAN TEST",
+      "position": "top-right",
+      "opacity": 0.8,
+      "fontSize": 28,
+      "color": "#00ff00",
+      "padding": 20
+    }
+>>>>>>> 8a54d7ff26e81802e1a9a1d5327e9848ffb7da97
   }
 ]
