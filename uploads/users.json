@@ -13,17 +13,17 @@
     "usage": {
       "count": 0
     },
-    "uploadsFolder": "uploads\\users\\Root",
+    "uploadsFolder": "uploads/users/Root",
     "watermarkSettings": {
       "enabled": true,
-      "text": "TEST WATERMARK",
-      "position": "center",
-      "opacity": 0.9,
-      "fontSize": 32,
-      "color": "#ff0000",
-      "padding": 25,
-      "async": true,
-      "fastMode": true
+      "text": "x02.me",
+      "position": "bottom-right",
+      "opacity": 0.6,
+      "fontSize": 20,
+      "color": "#ffffff",
+      "padding": 15,
+      "async": false,
+      "fastMode": false
     }
   },
   {
@@ -41,15 +41,17 @@
       "count": 1,
       "lastUsed": "2025-07-06T17:29:04.226Z"
     },
-    "uploadsFolder": "uploads\\users\\Kishan",
+    "uploadsFolder": "uploads/users/Kishan",
     "watermarkSettings": {
       "enabled": true,
-      "text": "KISHAN TEST",
-      "position": "top-right",
-      "opacity": 0.8,
-      "fontSize": 28,
-      "color": "#00ff00",
-      "padding": 20
+      "text": "x02.me",
+      "position": "bottom-right",
+      "opacity": 0.6,
+      "fontSize": 20,
+      "color": "#ffffff",
+      "padding": 15,
+      "async": false,
+      "fastMode": false
     }
   }
 ]
