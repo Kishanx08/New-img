@@ -107,66 +107,6 @@ export default function Admin() {
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [overviewError, setOverviewError] = useState<string | null>(null);
 
-  // Mock data for now - will be replaced with real API calls
-  useEffect(() => {
-    // Simulate real-time activity feed
-    const mockActivities: ActivityItem[] = [
-      {
-        id: '1',
-        type: 'upload',
-        message: 'New file uploaded: screenshot.png (2.3MB)',
-        timestamp: new Date().toISOString(),
-        user: 'kishan',
-        severity: 'info'
-      },
-      {
-        id: '2',
-        type: 'user',
-        message: 'New user registered: testuser',
-        timestamp: new Date(Date.now() - 30000).toISOString(),
-        user: 'testuser',
-        severity: 'success'
-      },
-      {
-        id: '3',
-        type: 'error',
-        message: 'Rate limit exceeded for user: spammer',
-        timestamp: new Date(Date.now() - 60000).toISOString(),
-        user: 'spammer',
-        severity: 'warning'
-      },
-      {
-        id: '4',
-        type: 'system',
-        message: 'Watermark processing completed',
-        timestamp: new Date(Date.now() - 90000).toISOString(),
-        severity: 'info'
-      }
-    ];
-
-    setActivities(mockActivities);
-
-    // Simulate system health updates
-    const updateSystemHealth = () => {
-      setSystemHealth({
-        cpu: Math.random() * 100,
-        memory: Math.random() * 100,
-        disk: Math.random() * 100,
-        network: {
-          upload: Math.random() * 1000,
-          download: Math.random() * 1000
-        },
-        activeConnections: Math.floor(Math.random() * 50),
-        uptime: '2h 15m'
-      });
-    };
-
-    updateSystemHealth();
-    const interval = setInterval(updateSystemHealth, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   // Fetch real user data for Users tab
   useEffect(() => {
     if (tab !== 'users') return;
@@ -448,7 +388,7 @@ export default function Admin() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4 max-h-96 overflow-y-auto">
-                          {activities.map((activity) => (
+                          {overview?.activityFeed.map((activity: any) => (
                             <div key={activity.id} className="flex items-start space-x-3 p-3 border border-[#222] rounded-lg bg-[#181A1B]">
                               <div className={`w-2 h-2 rounded-full mt-2 ${getSeverityColor(activity.severity)}`} />
                               <div className="flex-1">
@@ -490,12 +430,12 @@ export default function Admin() {
                               <Cpu className="w-4 h-4 text-[#00E6E6]" />
                               <span className="text-sm font-medium text-gray-200">CPU</span>
                             </div>
-                            <span className="text-sm text-[#00E6E6]">{systemHealth.cpu.toFixed(1)}%</span>
+                            <span className="text-sm text-[#00E6E6]">{overview?.systemHealth.cpu.toFixed(1)}%</span>
                           </div>
                           <div className="w-full bg-[#181A1B] rounded-full h-2">
                             <div 
                               className="bg-[#00E6E6] h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${systemHealth.cpu}%` }}
+                              style={{ width: `${overview?.systemHealth.cpu}%` }}
                             />
                           </div>
                         </div>
@@ -507,12 +447,12 @@ export default function Admin() {
                               <MemoryStick className="w-4 h-4 text-[#00E6E6]" />
                               <span className="text-sm font-medium text-gray-200">Memory</span>
                             </div>
-                            <span className="text-sm text-[#00E6E6]">{systemHealth.memory.toFixed(1)}%</span>
+                            <span className="text-sm text-[#00E6E6]">{overview?.systemHealth.memory.toFixed(1)}%</span>
                           </div>
                           <div className="w-full bg-[#181A1B] rounded-full h-2">
                             <div 
                               className="bg-[#00E6E6] h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${systemHealth.memory}%` }}
+                              style={{ width: `${overview?.systemHealth.memory}%` }}
                             />
                           </div>
                         </div>
@@ -524,12 +464,12 @@ export default function Admin() {
                               <HardDrive className="w-4 h-4 text-[#00E6E6]" />
                               <span className="text-sm font-medium text-gray-200">Disk</span>
                             </div>
-                            <span className="text-sm text-[#00E6E6]">{systemHealth.disk.toFixed(1)}%</span>
+                            <span className="text-sm text-[#00E6E6]">{overview?.systemHealth.disk.toFixed(1)}%</span>
                           </div>
                           <div className="w-full bg-[#181A1B] rounded-full h-2">
                             <div 
                               className="bg-[#00E6E6] h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${systemHealth.disk}%` }}
+                              style={{ width: `${overview?.systemHealth.disk}%` }}
                             />
                           </div>
                         </div>
@@ -544,8 +484,8 @@ export default function Admin() {
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-[#00E6E6]">↑ {systemHealth.network.upload.toFixed(0)} KB/s</span>
-                              <span className="text-[#00E6E6]">↓ {systemHealth.network.download.toFixed(0)} KB/s</span>
+                              <span className="text-[#00E6E6]">↑ {overview?.systemHealth.network.upload.toFixed(0)} KB/s</span>
+                              <span className="text-[#00E6E6]">↓ {overview?.systemHealth.network.download.toFixed(0)} KB/s</span>
                             </div>
                           </div>
                         </div>
@@ -556,7 +496,7 @@ export default function Admin() {
                             <Users className="w-4 h-4 text-[#00E6E6]" />
                             <span className="text-sm font-medium text-gray-200">Active Connections</span>
                           </div>
-                          <span className="text-sm font-bold text-[#00E6E6]">{systemHealth.activeConnections}</span>
+                          <span className="text-sm font-bold text-[#00E6E6]">{overview?.systemHealth.activeConnections}</span>
                         </div>
 
                         {/* Uptime */}
@@ -565,7 +505,7 @@ export default function Admin() {
                             <Clock className="w-4 h-4 text-[#00E6E6]" />
                             <span className="text-sm font-medium text-gray-200">Uptime</span>
                           </div>
-                          <span className="text-sm text-[#00E6E6]">{systemHealth.uptime}</span>
+                          <span className="text-sm text-[#00E6E6]">{overview?.systemHealth.uptime}</span>
                         </div>
                       </CardContent>
                     </Card>
