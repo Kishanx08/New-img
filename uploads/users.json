@@ -27,9 +27,43 @@
       "hourlyLimit": 25
     },
     "usage": {
-      "count": 1,
-      "lastUsed": "2025-07-06T17:29:04.226Z"
+      "count": 41,
+      "lastUsed": "2025-07-06T14:47:20.995Z"
     },
     "uploadsFolder": "uploads\\users\\Kishan"
+  },
+  {
+    "id": "7349f6a8-ae4c-4205-9dbf-5d4a4b95624f",
+    "username": "testuser",
+    "passwordHash": "$2b$12$/.eesRiWUQE8IfNjxoSRkOfvNBr3ecbQJx85NysZLa1G4BvtjjqiC",
+    "apiKey": "e96031aa08a347069d7b4b221460651d",
+    "createdAt": "2025-07-05T06:57:22.565Z",
+    "createdIp": "47.15.72.27",
+    "limits": {
+      "dailyLimit": 100,
+      "hourlyLimit": 25
+    },
+    "usage": {
+      "count": 2,
+      "lastUsed": "2025-07-05T07:30:17.653Z"
+    },
+    "uploadsFolder": "uploads/users/testuser"
+  },
+  {
+    "id": "2d18bf47-9daf-4cdb-99bf-c46d10a9724d",
+    "username": "harry",
+    "passwordHash": "$2b$12$WiNYfBllWeV5uKUcyZ8epOz9IBFmB8SMCfhf62DeZ1VivSMa5C3.C",
+    "apiKey": "2bc6ef6e3f3a489ea134b8f8e40eb03c",
+    "createdAt": "2025-07-06T11:08:38.286Z",
+    "createdIp": "47.15.72.214",
+    "limits": {
+      "dailyLimit": 100,
+      "hourlyLimit": 25
+    },
+    "usage": {
+      "count": 8,
+      "lastUsed": "2025-07-06T14:19:24.366Z"
+    },
+    "uploadsFolder": "uploads/users/harry"
   }
 ]

@@ -1,6 +1,10 @@
 {
   "api:f0e8a5eabfb94abc8fe18efe46e40abf": {
-    "count": 1,
-    "resetTime": 1751909344058
+    "count": 6,
+    "resetTime": 1751820851035
+  },
+  "api:2bc6ef6e3f3a489ea134b8f8e40eb03c": {
+    "count": 8,
+    "resetTime": 1751886677919
   }
 }
