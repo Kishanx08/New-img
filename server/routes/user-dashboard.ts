@@ -220,31 +220,67 @@ adminRouter.get('/users', (_req, res) => {
   }
 });
 
+adminRouter.get('/users/:id', (req, res) => {
+  try {
+    const usersPath = path.join(__dirname, '../../uploads/users.json');
+    if (!fs.existsSync(usersPath)) return res.status(404).json({ success: false, error: 'User DB not found' });
+    const users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    const user = users.find((u: any) => u.id === req.params.id);
+    if (!user) return res.status(404).json({ success: false, error: 'User not found' });
+    res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to get user' });
+  }
+});
+
 adminRouter.patch('/users/:id', (req, res) => {
   try {
-    const users = loadUsers();
-    const userIndex = users.findIndex(u => u.id === req.params.id);
-    if (userIndex === -1) return res.status(404).json({ success: false, error: 'User not found' });
-    const { username, dailyLimit, hourlyLimit, suspended } = req.body;
-    if (username) users[userIndex].username = username;
-    if (dailyLimit !== undefined) users[userIndex].limits.dailyLimit = dailyLimit;
-    if (hourlyLimit !== undefined) users[userIndex].limits.hourlyLimit = hourlyLimit;
-    if (suspended !== undefined) users[userIndex].suspended = suspended;
-    saveUsers(users);
-    res.json({ success: true, user: users[userIndex] });
+    const usersPath = path.join(__dirname, '../../uploads/users.json');
+    if (!fs.existsSync(usersPath)) return res.status(404).json({ success: false, error: 'User DB not found' });
+    let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    const idx = users.findIndex((u: any) => u.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ success: false, error: 'User not found' });
+    const user = users[idx];
+    const { username, dailyLimit, hourlyLimit, status } = req.body;
+    if (username) user.username = username;
+    if (dailyLimit) user.limits.dailyLimit = dailyLimit;
+    if (hourlyLimit) user.limits.hourlyLimit = hourlyLimit;
+    if (status) user.status = status;
+    users[idx] = user;
+    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+    res.json({ success: true, user });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to update user' });
   }
 });
 
+adminRouter.patch('/users/:id/status', (req, res) => {
+  try {
+    const usersPath = path.join(__dirname, '../../uploads/users.json');
+    if (!fs.existsSync(usersPath)) return res.status(404).json({ success: false, error: 'User DB not found' });
+    let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    const idx = users.findIndex((u: any) => u.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ success: false, error: 'User not found' });
+    const { status } = req.body;
+    if (!['active', 'suspended'].includes(status)) return res.status(400).json({ success: false, error: 'Invalid status' });
+    users[idx].status = status;
+    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
+    res.json({ success: true, user: users[idx] });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to update user status' });
+  }
+});
+
 adminRouter.post('/users/:id/reset-api', (req, res) => {
   try {
-    const users = loadUsers();
-    const userIndex = users.findIndex(u => u.id === req.params.id);
-    if (userIndex === -1) return res.status(404).json({ success: false, error: 'User not found' });
+    const usersPath = path.join(__dirname, '../../uploads/users.json');
+    if (!fs.existsSync(usersPath)) return res.status(404).json({ success: false, error: 'User DB not found' });
+    let users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    const idx = users.findIndex((u: any) => u.id === req.params.id);
+    if (idx === -1) return res.status(404).json({ success: false, error: 'User not found' });
     const newApiKey = crypto.randomBytes(16).toString('hex');
-    users[userIndex].apiKey = newApiKey;
-    saveUsers(users);
+    users[idx].apiKey = newApiKey;
+    fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
     res.json({ success: true, apiKey: newApiKey });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to reset API key' });
@@ -299,48 +335,35 @@ adminRouter.get('/insights', (_req, res) => {
 
 adminRouter.get('/alerts', (_req, res) => {
   try {
-    // Mock alerts
-    const now = Date.now();
-    const alerts = [
-      {
-        id: '1',
-        type: 'upload',
-        message: 'Large file uploaded: bigfile.png (52MB)',
-        timestamp: new Date(now - 1000 * 60 * 2).toISOString(),
-        severity: 'warning',
-        user: 'kishan',
-      },
-      {
-        id: '2',
-        type: 'rate-limit',
-        message: 'User hit rate limit: spammer',
-        timestamp: new Date(now - 1000 * 60 * 5).toISOString(),
-        severity: 'error',
-        user: 'spammer',
-      },
-      {
-        id: '3',
-        type: 'system',
-        message: 'CPU usage spiked above 80%',
-        timestamp: new Date(now - 1000 * 60 * 10).toISOString(),
-        severity: 'warning',
-      },
-      {
-        id: '4',
-        type: 'user',
-        message: 'New user registered: testuser',
-        timestamp: new Date(now - 1000 * 60 * 20).toISOString(),
-        severity: 'success',
-        user: 'testuser',
-      },
-      {
-        id: '5',
-        type: 'error',
-        message: 'System error: Watermarking failed',
-        timestamp: new Date(now - 1000 * 60 * 30).toISOString(),
-        severity: 'error',
-      },
-    ];
+    const alerts = [];
+    const rateLimitsPath = path.join(__dirname, '../../uploads/rate-limits.json');
+    const analyticsPath = path.join(__dirname, '../../uploads/analytics.json');
+    // Rate limit hits
+    if (fs.existsSync(rateLimitsPath)) {
+      const rateLimits = JSON.parse(fs.readFileSync(rateLimitsPath, 'utf8'));
+      for (const key in rateLimits) {
+        const rl = rateLimits[key];
+        if (rl.hits && rl.hits > 0) {
+          alerts.push({
+            type: 'rate-limit',
+            message: `Rate limit hit: ${rl.hits} times`,
+            user: rl.username || rl.user || key,
+            timestamp: rl.lastHit || new Date().toISOString(),
+            severity: rl.hits > 10 ? 'warning' : 'info',
+          });
+        }
+      }
+    }
+    // Large uploads/errors from analytics
+    if (fs.existsSync(analyticsPath)) {
+      const analytics = JSON.parse(fs.readFileSync(analyticsPath, 'utf8'));
+      if (Array.isArray(analytics.alerts)) {
+        for (const a of analytics.alerts) {
+          alerts.push(a);
+        }
+      }
+    }
+    alerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     res.json({ success: true, alerts });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to load alerts' });
@@ -349,35 +372,22 @@ adminRouter.get('/alerts', (_req, res) => {
 
 adminRouter.get('/analytics', (_req, res) => {
   try {
-    // Mock analytics data
-    const analytics = {
-      uploadVolume: [
-        { date: '2024-07-01', count: 20 },
-        { date: '2024-07-02', count: 35 },
-        { date: '2024-07-03', count: 28 },
-        { date: '2024-07-04', count: 40 },
-        { date: '2024-07-05', count: 32 },
-      ],
-      fileTypeDistribution: [
-        { type: 'jpg', count: 50 },
-        { type: 'png', count: 30 },
-        { type: 'gif', count: 10 },
-        { type: 'webp', count: 5 },
-        { type: 'bmp', count: 2 },
-      ],
-      userActivity: [
-        { username: 'kishan', count: 120 },
-        { username: 'testuser', count: 30 },
-        { username: 'root', count: 10 },
-      ],
-      storageTrends: [
-        { date: '2024-07-01', size: 200 },
-        { date: '2024-07-02', size: 250 },
-        { date: '2024-07-03', size: 300 },
-        { date: '2024-07-04', size: 350 },
-        { date: '2024-07-05', size: 400 },
-      ],
+    const analyticsPath = path.join(__dirname, '../../uploads/analytics.json');
+    let analytics = {
+      uploadVolume: [],
+      fileTypeDistribution: [],
+      userActivity: [],
+      storageTrends: [],
     };
+    if (fs.existsSync(analyticsPath)) {
+      const data = JSON.parse(fs.readFileSync(analyticsPath, 'utf8'));
+      analytics = {
+        uploadVolume: data.uploadVolume || [],
+        fileTypeDistribution: data.fileTypeDistribution || [],
+        userActivity: data.userActivity || [],
+        storageTrends: data.storageTrends || [],
+      };
+    }
     res.json({ success: true, analytics });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to load analytics' });
@@ -386,47 +396,72 @@ adminRouter.get('/analytics', (_req, res) => {
 
 adminRouter.get('/performance', (_req, res) => {
   try {
-    // Mock performance data
-    const performance = {
-      uploadSpeed: [
-        { date: '2024-07-01', speed: 2.1 },
-        { date: '2024-07-02', speed: 2.5 },
-        { date: '2024-07-03', speed: 2.3 },
-        { date: '2024-07-04', speed: 2.8 },
-        { date: '2024-07-05', speed: 2.6 },
-      ],
-      watermarkProcessing: [
-        { date: '2024-07-01', ms: 120 },
-        { date: '2024-07-02', ms: 110 },
-        { date: '2024-07-03', ms: 130 },
-        { date: '2024-07-04', ms: 125 },
-        { date: '2024-07-05', ms: 115 },
-      ],
-      errorRates: [
-        { date: '2024-07-01', rate: 0.01 },
-        { date: '2024-07-02', rate: 0.02 },
-        { date: '2024-07-03', rate: 0.00 },
-        { date: '2024-07-04', rate: 0.03 },
-        { date: '2024-07-05', rate: 0.01 },
-      ],
-      apiResponseTimes: [
-        { date: '2024-07-01', ms: 180 },
-        { date: '2024-07-02', ms: 170 },
-        { date: '2024-07-03', ms: 160 },
-        { date: '2024-07-04', ms: 175 },
-        { date: '2024-07-05', ms: 165 },
-      ],
-      bandwidthUsage: [
-        { date: '2024-07-01', mb: 120 },
-        { date: '2024-07-02', mb: 140 },
-        { date: '2024-07-03', mb: 130 },
-        { date: '2024-07-04', mb: 150 },
-        { date: '2024-07-05', mb: 160 },
-      ],
+    const usageStatsPath = path.join(__dirname, '../../uploads/usage-stats.json');
+    let performance = {
+      uploadSpeed: [],
+      watermarkProcessing: [],
+      errorRates: [],
+      apiResponseTimes: [],
+      bandwidthUsage: [],
     };
+    if (fs.existsSync(usageStatsPath)) {
+      const data = JSON.parse(fs.readFileSync(usageStatsPath, 'utf8'));
+      performance = {
+        uploadSpeed: data.uploadSpeed || [],
+        watermarkProcessing: data.watermarkProcessing || [],
+        errorRates: data.errorRates || [],
+        apiResponseTimes: data.apiResponseTimes || [],
+        bandwidthUsage: data.bandwidthUsage || [],
+      };
+    }
     res.json({ success: true, performance });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Failed to load performance data' });
+  }
+});
+
+adminRouter.get('/overview', (_req, res) => {
+  try {
+    const usersPath = path.join(__dirname, '../../uploads/users.json');
+    const usersDir = path.join(__dirname, '../../uploads/users');
+    let users = [];
+    if (fs.existsSync(usersPath)) {
+      users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
+    }
+    let uploadCount = 0;
+    let storageUsed = 0;
+    let todaysUploads = 0;
+    const today = new Date().toISOString().slice(0, 10);
+    if (fs.existsSync(usersDir)) {
+      const userDirs = fs.readdirSync(usersDir);
+      for (const user of userDirs) {
+        const userPath = path.join(usersDir, user);
+        if (fs.statSync(userPath).isDirectory()) {
+          const files = fs.readdirSync(userPath);
+          for (const file of files) {
+            const filePath = path.join(userPath, file);
+            const stat = fs.statSync(filePath);
+            uploadCount++;
+            storageUsed += stat.size;
+            const mtime = stat.mtime.toISOString().slice(0, 10);
+            if (mtime === today) {
+              todaysUploads++;
+            }
+          }
+        }
+      }
+    }
+    res.json({
+      success: true,
+      overview: {
+        userCount: users.length,
+        uploadCount,
+        storageUsed,
+        todaysUploads,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Failed to load overview' });
   }
 });
 
