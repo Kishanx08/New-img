@@ -14,6 +14,7 @@ export interface User {
     lastUsed?: string;
   };
   uploadsFolder: string;
+  suspended?: boolean;
 }
 
 export interface AuthRequest {

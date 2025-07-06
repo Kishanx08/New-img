@@ -403,6 +403,18 @@ export default function Index() {
                 </Button>
               )}
 
+              {!userSession?.isAnonymous && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-purple-400/40 text-purple-300 hover:bg-purple-900/20"
+                  onClick={() => navigate("/admin")}
+                >
+                  <Activity className="h-4 w-4 mr-2" />
+                  Admin
+                </Button>
+              )}
+
               <Button
                 size="sm"
                 variant="outline"
