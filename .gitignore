@@ -36,3 +36,5 @@ uploads/shortlinks.json
 # User uploads (keep folder structure but ignore files)
 uploads/users/*/
 !uploads/users/*/.gitkeep
+
+ecosystem.config.js
