@@ -38,3 +38,4 @@ uploads/users/*/
 !uploads/users/*/.gitkeep
 
 ecosystem.config.js
+ecosystem.config.json
