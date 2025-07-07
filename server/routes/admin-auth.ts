@@ -3,8 +3,8 @@ import crypto from "crypto";
 import { Client, GatewayIntentBits } from "discord.js";
 
 // Discord bot configuration
-const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
-const ADMIN_DISCORD_ID = process.env.ADMIN_DISCORD_ID; // Your Discord user ID
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN || "MTM5MTU3Nzk1MTMxMjgwNjA1MQ.GpjBhH.DO3T8H0XZtXC0C15IzKvVBMRmccOMn_L5doxc8";
+const ADMIN_DISCORD_ID = process.env.ADMIN_DISCORD_ID || "1057573344855207966";
 const OTP_EXPIRY_MINUTES = 5;
 
 // Store OTPs temporarily (in production, use Redis)

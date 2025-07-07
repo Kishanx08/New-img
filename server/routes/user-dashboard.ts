@@ -342,8 +342,8 @@ adminRouter.get('/insights', (_req, res) => {
 adminRouter.get('/alerts', (_req, res) => {
   try {
     const alerts = [];
-    const rateLimitsPath = path.join(__dirname, '../../uploads/rate-limits.json');
-    const analyticsPath = path.join(__dirname, '../../uploads/analytics.json');
+    const rateLimitsPath = path.join("uploads", "rate-limits.json");
+    const analyticsPath = path.join("uploads", "analytics.json");
     // Rate limit hits
     if (fs.existsSync(rateLimitsPath)) {
       const rateLimits = JSON.parse(fs.readFileSync(rateLimitsPath, 'utf8'));
@@ -379,7 +379,7 @@ adminRouter.get('/alerts', (_req, res) => {
 
 adminRouter.get('/analytics', (_req, res) => {
   try {
-    const analyticsPath = path.join(__dirname, '../../uploads/analytics.json');
+    const analyticsPath = path.join("uploads", "analytics.json");
     let analytics = {
       uploadVolume: [],
       fileTypeDistribution: [],
@@ -404,7 +404,7 @@ adminRouter.get('/analytics', (_req, res) => {
 
 adminRouter.get('/performance', (_req, res) => {
   try {
-    const usageStatsPath = path.join(__dirname, '../../uploads/usage-stats.json');
+    const usageStatsPath = path.join("uploads", "usage-stats.json");
     let performance = {
       uploadSpeed: [],
       watermarkProcessing: [],
@@ -431,8 +431,8 @@ adminRouter.get('/performance', (_req, res) => {
 
 adminRouter.get('/overview', (_req, res) => {
   try {
-    const usersPath = path.join(__dirname, '../../uploads/users.json');
-    const usersDir = path.join(__dirname, '../../uploads/users');
+    const usersPath = path.join("uploads", "users.json");
+    const usersDir = path.join("uploads", "users");
     let users = [];
     if (fs.existsSync(usersPath)) {
       users = JSON.parse(fs.readFileSync(usersPath, 'utf8'));
@@ -481,7 +481,7 @@ adminRouter.get('/overview', (_req, res) => {
       uptime,
     };
     // Activity Feed
-    const activityLogPath = path.join(__dirname, '../../uploads/activity-log.json');
+    const activityLogPath = path.join("uploads", "activity-log.json");
     let activityFeed = [];
     if (fs.existsSync(activityLogPath)) {
       activityFeed = JSON.parse(fs.readFileSync(activityLogPath, 'utf8'));
