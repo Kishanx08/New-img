@@ -2,6 +2,10 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+// Load environment variables from .env file
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -40,6 +44,18 @@ import { requestAdminOTP, verifyAdminOTP } from "./routes/admin-auth";
 
 export function createServer() {
   const app = express();
+
+  // Server startup message
+  console.log("🚀 Starting X02 Image Upload Server...");
+  console.log("📅 Server started at:", new Date().toISOString());
+  console.log("🌍 Environment:", process.env.NODE_ENV || "development");
+  
+  // Check Discord bot configuration
+  if (process.env.DISCORD_BOT_TOKEN && process.env.ADMIN_DISCORD_ID) {
+    console.log("🔐 Discord bot configuration found - Admin OTP feature enabled");
+  } else {
+    console.log("⚠️ Discord bot configuration missing - Admin OTP feature disabled");
+  }
 
   // Middleware
   app.use(cors());

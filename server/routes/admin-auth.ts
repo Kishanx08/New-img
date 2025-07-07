@@ -18,9 +18,35 @@ const discordClient = new Client({
   ],
 });
 
+// Discord bot connection status
+let discordBotConnected = false;
+
 // Initialize Discord bot
 if (DISCORD_BOT_TOKEN) {
-  discordClient.login(DISCORD_BOT_TOKEN);
+  console.log("🔄 Attempting to connect Discord bot...");
+  
+  discordClient.on('ready', () => {
+    console.log("✅ Discord bot connected successfully!");
+    console.log(`🤖 Bot logged in as: ${discordClient.user?.tag}`);
+    discordBotConnected = true;
+  });
+
+  discordClient.on('error', (error) => {
+    console.error("❌ Discord bot connection error:", error);
+    discordBotConnected = false;
+  });
+
+  discordClient.on('disconnect', () => {
+    console.log("⚠️ Discord bot disconnected");
+    discordBotConnected = false;
+  });
+
+  discordClient.login(DISCORD_BOT_TOKEN).catch((error) => {
+    console.error("❌ Failed to login Discord bot:", error);
+    discordBotConnected = false;
+  });
+} else {
+  console.log("⚠️ Discord bot token not found - admin OTP feature disabled");
 }
 
 // Generate OTP
@@ -49,10 +75,25 @@ async function sendDiscordOTP(otp: string): Promise<boolean> {
 export const requestAdminOTP: RequestHandler = async (req, res) => {
   try {
     // Check if Discord bot is configured
+    console.log("Discord Bot Token:", DISCORD_BOT_TOKEN ? "Set" : "Not set");
+    console.log("Admin Discord ID:", ADMIN_DISCORD_ID ? "Set" : "Not set");
+    console.log("Discord Bot Connected:", discordBotConnected ? "Yes" : "No");
+    
     if (!DISCORD_BOT_TOKEN || !ADMIN_DISCORD_ID) {
+      console.error("Discord bot configuration missing:");
+      console.error("DISCORD_BOT_TOKEN:", DISCORD_BOT_TOKEN ? "Present" : "Missing");
+      console.error("ADMIN_DISCORD_ID:", ADMIN_DISCORD_ID ? "Present" : "Missing");
       return res.status(500).json({
         success: false,
         error: "Discord bot not configured"
+      });
+    }
+
+    if (!discordBotConnected) {
+      console.error("Discord bot is not connected");
+      return res.status(500).json({
+        success: false,
+        error: "Discord bot is not connected. Please check bot token and restart server."
       });
     }
 
