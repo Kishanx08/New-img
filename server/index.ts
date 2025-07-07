@@ -36,6 +36,7 @@ import {
   listSubdomainImages,
 } from "./routes/subdomain-images";
 import watermarkSettingsRouter from "./routes/watermark-settings";
+import { requestAdminOTP, verifyAdminOTP } from "./routes/admin-auth";
 
 export function createServer() {
   const app = express();
@@ -114,7 +115,11 @@ export function createServer() {
   // Image deletion endpoint (API key optional for user files)
   app.delete("/api/images/:filename", optionalApiKey, handleDeleteImage);
 
-  // Admin endpoints
+  // Admin authentication endpoints
+  app.post("/api/admin/request-otp", requestAdminOTP);
+  app.post("/api/admin/verify-otp", verifyAdminOTP);
+
+  // Admin endpoints (protected by Discord OTP)
   app.use('/api/admin', adminRouter);
 
   // Only serve static files and SPA fallback in production
