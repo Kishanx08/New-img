@@ -35,7 +35,10 @@ import {
   BarChart3,
   Zap,
   Eye,
-  Bell
+  Bell,
+  Shield,
+  MessageSquare,
+  Key
 } from 'lucide-react';
 
 interface ActivityItem {
@@ -112,6 +115,13 @@ export default function Admin() {
   const [modalType, setModalType] = useState<'view' | 'edit' | 'resetApi' | null>(null);
   const [apiLoading, setApiLoading] = useState(false);
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isRequestingOTP, setIsRequestingOTP] = useState(false);
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
+  const [adminToken, setAdminToken] = useState<string | null>(null);
   const { toast } = useToast();
 
   // Fetch real user data for Users tab
@@ -358,6 +368,244 @@ export default function Admin() {
     setApiLoading(false);
   };
 
+  // Request OTP from Discord
+  const requestOTP = async () => {
+    setIsRequestingOTP(true);
+    try {
+      const response = await fetch('/api/admin/request-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setSessionId(data.sessionId);
+        setOtpExpiry(new Date(Date.now() + 5 * 60 * 1000)); // 5 minutes
+        toast({
+          title: "OTP Sent!",
+          description: "Check your Discord DM for the admin access code.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to send OTP",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to request OTP",
+        variant: "destructive"
+      });
+    } finally {
+      setIsRequestingOTP(false);
+    }
+  };
+
+  // Verify OTP
+  const verifyOTP = async () => {
+    if (!sessionId || !otpCode.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter the OTP code",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsVerifyingOTP(true);
+    try {
+      const response = await fetch('/api/admin/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          otp: otpCode.trim()
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setAdminToken(data.adminToken);
+        setIsAuthenticated(true);
+        localStorage.setItem('admin_token', data.adminToken);
+        toast({
+          title: "Access Granted!",
+          description: "Welcome to the admin panel.",
+        });
+      } else {
+        toast({
+          title: "Access Denied",
+          description: data.error || "Invalid OTP",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify OTP",
+        variant: "destructive"
+      });
+    } finally {
+      setIsVerifyingOTP(false);
+    }
+  };
+
+  // Check for existing admin session
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      setAdminToken(token);
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  // Logout function
+  const logout = () => {
+    setIsAuthenticated(false);
+    setAdminToken(null);
+    setSessionId(null);
+    setOtpCode('');
+    setOtpExpiry(null);
+    localStorage.removeItem('admin_token');
+    toast({
+      title: "Logged Out",
+      description: "Admin session ended.",
+    });
+  };
+
+  // Format countdown timer
+  const formatCountdown = () => {
+    if (!otpExpiry) return '';
+    const now = new Date();
+    const diff = otpExpiry.getTime() - now.getTime();
+    
+    if (diff <= 0) return 'Expired';
+    
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  // Update countdown every second
+  useEffect(() => {
+    if (!otpExpiry) return;
+    
+    const interval = setInterval(() => {
+      const now = new Date();
+      if (now >= otpExpiry) {
+        setOtpExpiry(null);
+        setSessionId(null);
+        toast({
+          title: "OTP Expired",
+          description: "Please request a new code.",
+          variant: "destructive"
+        });
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [otpExpiry, toast]);
+
+  // Admin Authentication Screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#0e101e] text-gray-200 flex items-center justify-center">
+        <Card className="glass-card border border-[#00E6E6]/20 rounded-2xl backdrop-blur-md shadow-none w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-[#00E6E6]/10 rounded-full flex items-center justify-center mb-4">
+              <Shield className="w-8 h-8 text-[#00E6E6]" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-[#00E6E6]">Admin Access</CardTitle>
+            <p className="text-gray-400">Discord OTP Authentication Required</p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {!sessionId ? (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <MessageSquare className="w-12 h-12 text-[#00E6E6] mx-auto mb-2" />
+                  <p className="text-gray-300 mb-4">
+                    Click the button below to receive an admin access code via Discord DM.
+                  </p>
+                </div>
+                <Button 
+                  onClick={requestOTP} 
+                  disabled={isRequestingOTP}
+                  className="w-full bg-[#00E6E6] text-black hover:bg-[#00E6E6]/80"
+                >
+                  {isRequestingOTP ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Sending OTP...
+                    </>
+                  ) : (
+                    <>
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Send Discord OTP
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-center">
+                  <Key className="w-12 h-12 text-[#00E6E6] mx-auto mb-2" />
+                  <p className="text-gray-300 mb-2">
+                    Enter the 6-digit code sent to your Discord DM.
+                  </p>
+                  {otpExpiry && (
+                    <div className="text-sm text-red-400 mb-4">
+                      ⏰ Expires in: {formatCountdown()}
+                    </div>
+                  )}
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="text-center text-2xl font-mono tracking-widest bg-[#181A1B] border-[#333] focus:border-[#00E6E6]"
+                  maxLength={6}
+                />
+                <Button 
+                  onClick={verifyOTP} 
+                  disabled={isVerifyingOTP || !otpCode.trim() || otpCode.length !== 6}
+                  className="w-full bg-[#00E6E6] text-black hover:bg-[#00E6E6]/80"
+                >
+                  {isVerifyingOTP ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="w-4 h-4 mr-2" />
+                      Access Admin Panel
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setSessionId(null);
+                    setOtpCode('');
+                    setOtpExpiry(null);
+                  }}
+                  variant="outline"
+                  className="w-full border-[#333] text-gray-400 hover:bg-[#181A1B]"
+                >
+                  Request New Code
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0e101e] text-gray-200 flex">
       {/* Sidebar Navigation */}
@@ -401,6 +649,15 @@ export default function Admin() {
               <Button size="sm" className="bg-[#23272A] border border-[#00E6E6] text-[#00E6E6] hover:bg-[#23272A]/80">
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
+              </Button>
+              <Button 
+                onClick={logout}
+                size="sm" 
+                variant="outline"
+                className="border-red-400 text-red-400 hover:bg-red-900/20"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Logout
               </Button>
             </div>
           </div>
