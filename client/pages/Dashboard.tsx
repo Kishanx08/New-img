@@ -14,6 +14,8 @@ import {
   Download,
   Image,
   Settings,
+  Cpu,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -313,7 +315,7 @@ function DashboardContent() {
     return (
       <Card className={`${theme.card} backdrop-blur-md border`}>
         <CardHeader>
-          <CardTitle className={`flex items-center gap-2 ${theme.accent}`}>
+          <CardTitle className={`flex items-center gap-2 ${darkMode ? theme.accent : 'text-black'}`}>
             <Image className="w-5 h-5" />
             Watermark Settings
           </CardTitle>
@@ -883,48 +885,39 @@ function DashboardContent() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* API Usage */}
-            <div>
-              <h3 className={`text-lg font-semibold mb-3 ${theme.accent}`}>
+            {/* API Usage Section */}
+            <div className="mb-8">
+              <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${theme.accent}`}>
+                <Key className="h-5 w-5" />
                 API Usage
               </h3>
               <div className="space-y-3">
                 <div>
-                  <h4 className="font-medium mb-2">Upload Image</h4>
-                  <div
-                    className={`${theme.card} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border`}
-                    style={{ border: "1px solid #fff2" }}
-                  >
-                    <div className="mb-2">POST https://x02.me/api/upload</div>
-                    <div className="mb-2">
-                      Headers: x-api-key: {data?.user?.apiKey || "YOUR_API_KEY"}
-                    </div>
-                    <div>Body: multipart/form-data with 'image' field</div>
+                  <h4 className="font-medium mb-2 flex items-center gap-2"><Upload className="h-4 w-4" /> Upload Image</h4>
+                  <div className="rounded-lg font-mono text-sm p-4 border shadow bg-cyan-100/40 text-black overflow-x-auto">
+                    <div className="mb-2">POST <span className="font-bold text-blue-700">https://x02.me/api/upload</span></div>
+                    <div className="mb-2">Headers: <span className="font-bold text-blue-700">x-api-key: {data?.user?.apiKey || "YOUR_API_KEY"}</span></div>
+                    <div>Body: <span className="font-bold text-blue-700">multipart/form-data</span> with <span className="font-bold">'image'</span> field</div>
                   </div>
                 </div>
-
                 <div>
-                  <h4 className="font-medium mb-2">cURL Example</h4>
-                  <div
-                    className={`${theme.card} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border overflow-x-auto`}
-                    style={{ border: "1px solid #fff2" }}
-                  >
-                    {`curl -X POST "https://x02.me/api/upload" \\
-  -H "x-api-key: ${data?.user?.apiKey || "YOUR_API_KEY"}" \\
+                  <h4 className="font-medium mb-2 flex items-center gap-2"><Cpu className="h-4 w-4" /> cURL Example</h4>
+                  <div className="rounded-lg font-mono text-sm p-4 border shadow bg-cyan-100/40 text-black overflow-x-auto">
+                    {`curl -X POST "https://x02.me/api/upload" \
+  -H "x-api-key: ${data?.user?.apiKey || "YOUR_API_KEY"}" \
   -F "image=@/path/to/your/image.png"`}
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* ShareX Configuration */}
-            <div>
-              <h3 className={`text-lg font-semibold mb-3 ${theme.accent}`}>
+            {/* ShareX Configuration Section */}
+            <div className="mb-8">
+              <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${theme.accent}`}>
+                <Download className="h-5 w-5" />
                 ShareX Configuration
               </h3>
               <p className={`${theme.subtext} mb-3`}>
-                Download this SXCU file to automatically configure ShareX with
-                your API key:
+                Download this SXCU file to automatically configure ShareX with your API key:
               </p>
               <div className="flex gap-3 mb-4">
                 <Button
@@ -945,13 +938,9 @@ function DashboardContent() {
                       Arguments: {},
                       ResponseType: "Text",
                     };
-
-                    const blob = new Blob(
-                      [JSON.stringify(sharexConfig, null, 2)],
-                      {
-                        type: "application/json",
-                      },
-                    );
+                    const blob = new Blob([
+                      JSON.stringify(sharexConfig, null, 2)
+                    ], { type: "application/json" });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     a.href = url;
@@ -960,11 +949,9 @@ function DashboardContent() {
                     a.click();
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
-
                     toast({
                       title: "ShareX Config Downloaded",
-                      description:
-                        "Import the .sxcu file into ShareX to get started!",
+                      description: "Import the .sxcu file into ShareX to get started!",
                     });
                   }}
                 >
@@ -975,31 +962,25 @@ function DashboardContent() {
                   variant="outline"
                   className={`${theme.buttonOutline} hover:shadow-green-400/20 transition-shadow`}
                   onClick={() => {
-                    const configText = JSON.stringify(
-                      {
-                        Version: "13.6.1",
-                        Name: "X02 Image Uploader",
-                        DestinationType: "ImageUploader",
-                        RequestMethod: "POST",
-                        RequestURL: "https://x02.me/api/upload",
-                        Headers: {
-                          "X-API-Key": data?.user?.apiKey || "YOUR_API_KEY",
-                        },
-                        Body: "MultipartFormData",
-                        FileFormName: "image",
-                        DeletionURL: "",
-                        Arguments: {},
-                        ResponseType: "Text",
+                    const configText = JSON.stringify({
+                      Version: "13.6.1",
+                      Name: "X02 Image Uploader",
+                      DestinationType: "ImageUploader",
+                      RequestMethod: "POST",
+                      RequestURL: "https://x02.me/api/upload",
+                      Headers: {
+                        "X-API-Key": data?.user?.apiKey || "YOUR_API_KEY",
                       },
-                      null,
-                      2,
-                    );
-
+                      Body: "MultipartFormData",
+                      FileFormName: "image",
+                      DeletionURL: "",
+                      Arguments: {},
+                      ResponseType: "Text",
+                    }, null, 2);
                     navigator.clipboard.writeText(configText).then(() => {
                       toast({
                         title: "Config Copied",
-                        description:
-                          "ShareX configuration copied to clipboard!",
+                        description: "ShareX configuration copied to clipboard!",
                       });
                     });
                   }}
@@ -1008,12 +989,9 @@ function DashboardContent() {
                   Copy Config
                 </Button>
               </div>
-
               <div>
                 <h4 className="font-medium mb-2">ShareX Setup Instructions</h4>
-                <ol
-                  className={`${theme.subtext} text-sm space-y-1 list-decimal list-inside`}
-                >
+                <ol className={`${theme.subtext} text-sm space-y-1 list-decimal list-inside`}>
                   <li>Download the .sxcu file above</li>
                   <li>Open ShareX → Destinations → Custom uploader settings</li>
                   <li>Click "Import" and select the downloaded .sxcu file</li>
@@ -1022,73 +1000,40 @@ function DashboardContent() {
                 </ol>
               </div>
             </div>
-
-            {/* Programming Examples */}
-            <div>
-              <h3 className={`text-lg font-semibold mb-3 ${theme.accent}`}>
+            {/* Programming Examples Section */}
+            <div className="mb-8">
+              <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${theme.accent}`}>
+                <Cpu className="h-5 w-5" />
                 Programming Examples
               </h3>
-
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium mb-2">Python Example</h4>
-                  <div
-                    className={`${theme.card} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border overflow-x-auto`}
-                    style={{ border: "1px solid #fff2" }}
-                  >
-                    {`import requests
-
-url = "https://x02.me/api/upload"
-headers = {"x-api-key": "${data?.user?.apiKey || "YOUR_API_KEY"}"}
-files = {"image": open("image.png", "rb")}
-
-response = requests.post(url, headers=headers, files=files)
-print(response.text)  # Direct image URL`}
+                  <h4 className="font-medium mb-2 flex items-center gap-2"><Zap className="h-4 w-4" /> Python Example</h4>
+                  <div className="rounded-lg font-mono text-sm p-4 border shadow bg-cyan-100/40 text-black overflow-x-auto">
+                    {`import requests\n\nurl = "https://x02.me/api/upload"\nheaders = {"x-api-key": "${data?.user?.apiKey || "YOUR_API_KEY"}"}\nfiles = {"image": open("image.png", "rb")}\n\nresponse = requests.post(url, headers=headers, files=files)\nprint(response.text)  # Direct image URL`}
                   </div>
                 </div>
-
                 <div>
-                  <h4 className="font-medium mb-2">JavaScript Example</h4>
-                  <div
-                    className={`${theme.card} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border overflow-x-auto`}
-                    style={{ border: "1px solid #fff2" }}
-                  >
-                    {`const formData = new FormData();
-formData.append('image', fileInput.files[0]);
-
-fetch('https://x02.me/api/upload', {
-  method: 'POST',
-  headers: {
-    'x-api-key': '${data?.user?.apiKey || "YOUR_API_KEY"}'
-  },
-  body: formData
-})
-.then(response => response.text())
-.then(imageUrl => console.log(imageUrl));`}
+                  <h4 className="font-medium mb-2 flex items-center gap-2"><Zap className="h-4 w-4" /> JavaScript Example</h4>
+                  <div className="rounded-lg font-mono text-sm p-4 border shadow bg-cyan-100/40 text-black overflow-x-auto">
+                    {`const formData = new FormData();\nformData.append('image', fileInput.files[0]);\n\nfetch('https://x02.me/api/upload', {\n  method: 'POST',\n  headers: {\n    'x-api-key': '${data?.user?.apiKey || "YOUR_API_KEY"}'\n  },\n  body: formData\n})\n.then(response => response.text())\n.then(imageUrl => console.log(imageUrl));`}
                   </div>
                 </div>
               </div>
             </div>
-
-            {/* Rate Limits Info */}
+            {/* Rate Limits Info Section */}
             <div>
-              <h3 className={`text-lg font-semibold mb-3 ${theme.accent}`}>
+              <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${theme.accent}`}>
+                <Clock className="h-5 w-5" />
                 Rate Limits & Guidelines
               </h3>
-              <div
-                className={`${theme.card} p-4 rounded-lg backdrop-blur-lg border`}
-                style={{ border: "1px solid #fff2" }}
-              >
+              <div className="rounded-lg p-4 border shadow bg-cyan-100/40 text-black">
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <h4 className="font-medium mb-2">Your Current Limits</h4>
                     <ul className="space-y-1">
-                      <li>
-                        Daily: {data?.user?.limits?.dailyLimit || 0} uploads
-                      </li>
-                      <li>
-                        Hourly: {data?.user?.limits?.hourlyLimit || 0} uploads
-                      </li>
+                      <li>Daily: {data?.user?.limits?.dailyLimit || 0} uploads</li>
+                      <li>Hourly: {data?.user?.limits?.hourlyLimit || 0} uploads</li>
                       <li>Max file size: 30MB</li>
                       <li>Supported: JPG, PNG, GIF, WebP</li>
                     </ul>
