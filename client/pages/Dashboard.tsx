@@ -514,7 +514,6 @@ function DashboardContent() {
     ? {
         bg: "bg-black",
         card: "bg-black/60 border-green-800/40 text-white",
-        glass: "bg-black/70 border-green-700/40 text-green-300",
         input: "bg-black/80 text-white border-green-800/40",
         text: "text-white",
         accent: "text-green-300 border-green-400",
@@ -523,20 +522,19 @@ function DashboardContent() {
         buttonOutline: "border-green-700 text-green-300 hover:bg-green-900/30",
       }
     : {
-        bg: "bg-white",
-        card: "bg-white/80 border-green-300/40 text-black",
-        glass: "bg-white/90 border-green-300/40 text-green-700",
-        input: "bg-white text-black border-green-300/40",
-        text: "text-black",
-        accent: "text-green-700 border-green-500",
-        subtext: "text-green-700/70",
-        button: "bg-green-600 hover:bg-green-500 text-white",
-        buttonOutline: "border-green-600 text-green-700 hover:bg-green-100/30",
+        bg: "bg-gradient-to-br from-gray-100 via-blue-100 to-teal-50",
+        card: "bg-white border border-gray-200 rounded-xl shadow-md text-gray-900",
+        input: "bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:border-teal-400 focus:ring-1 focus:ring-teal-200",
+        text: "text-gray-900",
+        accent: "text-teal-600 border-teal-500",
+        subtext: "text-gray-500",
+        button: "bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-medium rounded px-4 py-2 shadow",
+        buttonOutline: "border border-teal-500 text-teal-600 hover:bg-teal-50 font-medium rounded px-4 py-2",
       };
 
   return (
     <div
-      className={`min-h-screen relative overflow-hidden ${theme.bg} ${theme.text}`}
+      className={`min-h-screen relative overflow-hidden ${theme.bg} ${theme.text}${darkMode ? ' dark' : ''}`}
       style={{ fontFamily: "Inter, Poppins, Montserrat, sans-serif" }}
     >
       {/* Header */}
@@ -916,7 +914,7 @@ function DashboardContent() {
                 <div>
                   <h4 className="font-medium mb-2">Upload Image</h4>
                   <div
-                    className={`${theme.glass} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border`}
+                    className={`${theme.card} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border`}
                     style={{ border: "1px solid #fff2" }}
                   >
                     <div className="mb-2">POST https://x02.me/api/upload</div>
