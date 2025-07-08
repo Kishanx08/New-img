@@ -323,6 +323,7 @@ function DashboardContent() {
             <Switch
               checked={watermarkEnabled}
               onCheckedChange={setWatermarkEnabled}
+              className={darkMode ? '' : 'data-[state=checked]:bg-teal-500 data-[state=unchecked]:bg-gray-300'}
             />
             <Label className={theme.text}>Enable watermark on uploads</Label>
           </div>
@@ -371,11 +372,11 @@ function DashboardContent() {
                 <Label className={theme.text}>Font Size: {watermarkFontSize}px</Label>
                 <Slider
                   value={[watermarkFontSize]}
-                  onValueChange={([value]) => setWatermarkFontSize(value)}
+                  onValueChange={([v]) => setWatermarkFontSize(v)}
                   min={8}
-                  max={100}
+                  max={64}
                   step={1}
-                  className="w-full"
+                  className={darkMode ? '' : 'accent-teal-500'}
                 />
               </div>
 
@@ -393,11 +394,11 @@ function DashboardContent() {
                 <Label className={theme.text}>Padding: {watermarkPadding}px</Label>
                 <Slider
                   value={[watermarkPadding]}
-                  onValueChange={([value]) => setWatermarkPadding(value)}
+                  onValueChange={([v]) => setWatermarkPadding(v)}
                   min={0}
-                  max={100}
+                  max={64}
                   step={1}
-                  className="w-full"
+                  className={darkMode ? '' : 'accent-teal-500'}
                 />
               </div>
 
@@ -411,7 +412,7 @@ function DashboardContent() {
               </div>
               
               {asyncWatermarking && (
-                <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
+                <div className="text-xs text-black p-2 bg-muted/30 rounded">
                   ⚡ Images will upload instantly, then get watermarked in the background
                 </div>
               )}
@@ -426,7 +427,7 @@ function DashboardContent() {
               </div>
               
               {fastMode && (
-                <div className="text-xs text-muted-foreground p-2 bg-muted/30 rounded">
+                <div className="text-xs text-black p-2 bg-muted/30 rounded">
                   🚀 Large images will be resized and compressed for maximum speed
                 </div>
               )}
@@ -580,6 +581,13 @@ function DashboardContent() {
                 Logout
               </Button>
             </div>
+            <Button
+              size="sm"
+              className={darkMode ? 'border border-green-400 text-green-300 bg-black hover:bg-green-900/20 transition-colors' : 'border border-blue-500 bg-transparent text-blue-600 hover:bg-blue-50'}
+              onClick={() => setDarkMode((d) => !d)}
+            >
+              {darkMode ? "Light Mode" : "Dark Mode"}
+            </Button>
           </div>
         </div>
       </header>
