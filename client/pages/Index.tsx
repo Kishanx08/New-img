@@ -18,6 +18,10 @@ import {
   Trash2,
   UserPlus,
   User,
+  ArrowUpCircle,
+  BarChart2,
+  ShieldCheck,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -78,6 +82,7 @@ export default function Index() {
   const [darkMode, setDarkMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [loadingUploads, setLoadingUploads] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -107,13 +112,13 @@ export default function Index() {
   }, [navigate]);
 
   const loadUserUploads = async (apiKey: string) => {
+    setLoadingUploads(true);
     try {
       const response = await fetch("/api/user/dashboard", {
         headers: {
           "x-api-key": apiKey,
         },
       });
-
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data.uploads) {
@@ -130,6 +135,8 @@ export default function Index() {
       }
     } catch (error) {
       console.error("Failed to load user uploads:", error);
+    } finally {
+      setLoadingUploads(false);
     }
   };
 
@@ -231,14 +238,7 @@ export default function Index() {
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setEditImage(file);
-        setEditPreview(ev.target.result);
-        setEditModalOpen(true);
-      };
-      reader.readAsDataURL(file);
+      handleFileUpload(e.target.files[0]);
     }
   };
 
@@ -426,13 +426,13 @@ export default function Index() {
       <main className="max-w-2xl mx-auto px-4 relative z-10">
         <section className="mb-8">
           <div
-            className={`rounded-lg border ${theme.card} p-8 text-center transition-colors ${dragActive ? "ring-2 ring-blue-400" : ""}`}
+            className={`rounded-lg border ${theme.card} p-8 text-center transition-all relative group ${dragActive ? "ring-4 ring-blue-400 scale-105 shadow-2xl" : "hover:shadow-xl hover:scale-[1.02]"} duration-200`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            style={{ cursor: uploading ? "not-allowed" : "pointer" }}
+            style={{ cursor: uploading ? "not-allowed" : "pointer", transition: 'box-shadow 0.2s, transform 0.2s' }}
           >
             <input
               ref={fileInputRef}
@@ -442,6 +442,9 @@ export default function Index() {
               onChange={handleFileSelect}
               disabled={uploading}
             />
+            <div className="flex flex-col items-center justify-center mb-2">
+              <ArrowUpCircle className={`w-12 h-12 mb-2 text-blue-400 transition-transform duration-300 ${dragActive ? 'animate-bounce' : 'group-hover:animate-bounce-slow'}`} />
+            </div>
             {uploading ? (
               <>
                 <div className="text-blue-600 font-semibold mb-2">
@@ -484,15 +487,57 @@ export default function Index() {
             )}
           </div>
         </section>
+        {/* Feature Highlights for Anonymous Users */}
+        {userSession?.isAnonymous && (
+          <section className="mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div className="rounded-xl border shadow-lg backdrop-blur-md bg-white/80 dark:bg-black/70 border-gray-200 dark:border-green-900/60 p-6 flex flex-col items-center text-center">
+                <BarChart2 className="w-8 h-8 mb-2 text-amber-500" />
+                <div className="font-semibold text-base mb-1">Analytics</div>
+                <div className="text-xs text-gray-500 dark:text-green-200">Track your uploads and usage stats with your account.</div>
+              </div>
+              <div className="rounded-xl border shadow-lg backdrop-blur-md bg-white/80 dark:bg-black/70 border-gray-200 dark:border-green-900/60 p-6 flex flex-col items-center text-center">
+                <ShieldCheck className="w-8 h-8 mb-2 text-teal-500" />
+                <div className="font-semibold text-base mb-1">Watermarking</div>
+                <div className="text-xs text-gray-500 dark:text-green-200">Protect your images with custom watermarks.</div>
+              </div>
+              <div className="rounded-xl border shadow-lg backdrop-blur-md bg-white/80 dark:bg-black/70 border-gray-200 dark:border-green-900/60 p-6 flex flex-col items-center text-center">
+                <Key className="w-8 h-8 mb-2 text-blue-500" />
+                <div className="font-semibold text-base mb-1">API Access</div>
+                <div className="text-xs text-gray-500 dark:text-green-200">Automate uploads and integrate with your apps using our API.</div>
+              </div>
+              <div className="rounded-xl border shadow-lg backdrop-blur-md bg-white/80 dark:bg-black/70 border-gray-200 dark:border-green-900/60 p-6 flex flex-col items-center text-center">
+                <Globe className="w-8 h-8 mb-2 text-green-500" />
+                <div className="font-semibold text-base mb-1">Custom Subdomain</div>
+                <div className="text-xs text-gray-500 dark:text-green-200">Get image links generated on your own subdomain (e.g., <span className='font-semibold'>yourname.x02.me</span>).</div>
+              </div>
+            </div>
+          </section>
+        )}
         <section>
-          <h2 className="text-lg font-semibold mb-4" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>Uploaded Images</h2>
-          {uploadedImages.length === 0 ? (
+          <h2 className="text-lg font-semibold mb-4" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>Most Recent Uploads</h2>
+          {loadingUploads ? (
+            <div className="grid gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={`flex items-center gap-4 ${theme.card} p-3 animate-pulse`}>
+                  <div className="w-16 h-16 bg-gray-200 rounded border" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    <div className="h-3 bg-gray-100 rounded w-1/3" />
+                    <div className="h-3 bg-gray-100 rounded w-2/3" />
+                  </div>
+                  <div className="w-20 h-8 bg-gray-200 rounded" />
+                  <div className="w-16 h-8 bg-gray-100 rounded" />
+                </div>
+              ))}
+            </div>
+          ) : uploadedImages.length === 0 ? (
             <div className={`${theme.subtext} text-base`}>
               No images uploaded yet.
             </div>
           ) : (
             <div className="grid gap-4">
-              {uploadedImages.map((image, idx) => (
+              {uploadedImages.slice(0, 3).map((image, idx) => (
                 <div
                   key={idx}
                   className={`flex items-center gap-4 ${theme.card} p-3 transition-all duration-200 hover:shadow-md`}
@@ -527,35 +572,6 @@ export default function Index() {
                   >
                     Open
                   </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-red-500 text-red-500 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Image?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete "{image.originalName}".
-                          This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteImage(image.url, image.id)}
-                          className="bg-red-500 text-white hover:bg-red-600"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
                 </div>
               ))}
             </div>
@@ -567,39 +583,6 @@ export default function Index() {
       >
         &copy; {new Date().getFullYear()} X02 Image Uploader
       </footer>
-      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Preview Image</DialogTitle>
-          </DialogHeader>
-          {editPreview && (
-            <div className="flex flex-col items-center gap-4">
-              <div className="relative w-64 h-64 bg-gray-100 flex items-center justify-center select-none rounded-lg">
-                <img
-                  src={editPreview}
-                  alt="Preview"
-                  className="max-w-full max-h-full object-contain"
-                />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button
-              onClick={() => {
-                setEditModalOpen(false);
-                handleFileUpload(editImage);
-              }}
-              className={theme.button}
-              style={{ fontFamily: 'Poppins, Inter, sans-serif' }}
-            >
-              Upload
-            </Button>
-            <DialogClose asChild>
-              <Button variant="outline" className={theme.buttonOutline}>Cancel</Button>
-            </DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

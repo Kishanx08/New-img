@@ -388,7 +388,7 @@ function DashboardContent() {
                   type="color"
                   value={watermarkColor}
                   onChange={(e) => setWatermarkColor(e.target.value)}
-                  className="w-20 h-10 p-1 border rounded"
+                  className="w-20 h-10 p-1 rounded-lg shadow-lg border-none outline-none ring-2 ring-teal-200/40 bg-white/80 dark:bg-black/60 transition-all"
                 />
               </div>
 
@@ -468,11 +468,21 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background text-foreground">
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p>Loading dashboard...</p>
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center">
+        <div className="w-full max-w-4xl px-4">
+          <div className="grid gap-8 md:grid-cols-2">
+            {[1,2].map((i) => (
+              <div key={i} className="rounded-xl border p-8 shadow-xl backdrop-blur-md bg-white/70 dark:bg-black/60 border-gray-200 dark:border-green-900/60 animate-pulse">
+                <div className="h-8 w-1/2 bg-gray-200 dark:bg-green-900 rounded mb-6" />
+                <div className="space-y-4">
+                  <div className="h-4 w-3/4 bg-gray-100 dark:bg-green-950 rounded" />
+                  <div className="h-4 w-1/2 bg-gray-100 dark:bg-green-950 rounded" />
+                  <div className="h-4 w-2/3 bg-gray-100 dark:bg-green-950 rounded" />
+                  <div className="h-4 w-1/3 bg-gray-100 dark:bg-green-950 rounded" />
+                </div>
+                <div className="mt-8 h-10 w-full bg-gray-200 dark:bg-green-900 rounded" />
+              </div>
+            ))}
           </div>
         </div>
       </div>
