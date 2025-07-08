@@ -279,7 +279,7 @@ export default function Index() {
         headers["x-api-key"] = (userSession as UserSession).apiKey;
       }
 
-      const response = await fetch(`/api/i/${filename}`, {
+      const response = await fetch(`/i/${filename}`, {
         method: "DELETE",
         headers,
       });

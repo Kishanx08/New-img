@@ -10,11 +10,11 @@ import {
 
 /**
  * Handles subdomain-based image serving
- * Route: GET /api/i/:filename
+ * Route: GET /i/:filename
  *
  * Examples:
- * - https://kapoor.x02.me/api/i/photo.png
- * - https://kishan.x02.me/api/i/screenshot.jpg
+ * - https://kapoor.x02.me/i/photo.png
+ * - https://kishan.x02.me/i/screenshot.jpg
  */
 export const handleSubdomainImages: RequestHandler = (req, res) => {
   try {
@@ -173,7 +173,7 @@ export const handleSubdomainImages: RequestHandler = (req, res) => {
 
 /**
  * Lists all images for a subdomain user
- * Route: GET /api/i (when accessed via subdomain)
+ * Route: GET /i (when accessed via subdomain)
  */
 export const listSubdomainImages: RequestHandler = (req, res) => {
   try {
@@ -220,7 +220,7 @@ export const listSubdomainImages: RequestHandler = (req, res) => {
         const stats = fs.statSync(filePath);
         return {
           filename: file,
-          url: `https://${subdomain}.x02.me/api/i/${file}`,
+          url: `https://${subdomain}.x02.me/i/${file}`,
           size: stats.size,
           modified: stats.mtime.toISOString(),
         };
