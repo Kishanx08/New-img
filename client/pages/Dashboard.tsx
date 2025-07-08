@@ -64,7 +64,7 @@ function DashboardContent() {
   const [userSession, setUserSession] = useState<
     UserSession | AnonymousSession | null
   >(null);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
     // Get user session
@@ -216,11 +216,11 @@ function DashboardContent() {
     const [watermarkPosition, setWatermarkPosition] = useState('bottom-right');
     const [watermarkOpacity, setWatermarkOpacity] = useState(0.6);
     const [watermarkFontSize, setWatermarkFontSize] = useState(20);
-      const [watermarkColor, setWatermarkColor] = useState('#ffffff');
-  const [watermarkPadding, setWatermarkPadding] = useState(15);
-  const [asyncWatermarking, setAsyncWatermarking] = useState(false);
-  const [fastMode, setFastMode] = useState(false);
-  const [loading, setLoading] = useState(false);
+    const [watermarkColor, setWatermarkColor] = useState('#ffffff');
+    const [watermarkPadding, setWatermarkPadding] = useState(15);
+    const [asyncWatermarking, setAsyncWatermarking] = useState(false);
+    const [fastMode, setFastMode] = useState(false);
+    const [loading, setLoading] = useState(false);
 
     // Load current settings on component mount
     useEffect(() => {
@@ -357,10 +357,11 @@ function DashboardContent() {
                 <Label className={theme.text}>Opacity: {Math.round(watermarkOpacity * 100)}%</Label>
                 <Slider
                   value={[watermarkOpacity * 100]}
-                  onValueChange={([value]) => setWatermarkOpacity(value / 100)}
+                  onValueChange={([v]) => setWatermarkOpacity(v / 100)}
+                  min={10}
                   max={100}
-                  step={5}
-                  className="w-full"
+                  step={1}
+                  className={darkMode ? '' : 'accent-teal-500'}
                 />
               </div>
 
@@ -402,6 +403,7 @@ function DashboardContent() {
                 <Switch
                   checked={asyncWatermarking}
                   onCheckedChange={setAsyncWatermarking}
+                  className={darkMode ? '' : 'data-[state=checked]:bg-teal-500 data-[state=unchecked]:bg-gray-300'}
                 />
                 <Label className={theme.text}>Fast upload (async watermarking)</Label>
               </div>
@@ -416,6 +418,7 @@ function DashboardContent() {
                 <Switch
                   checked={fastMode}
                   onCheckedChange={setFastMode}
+                  className={darkMode ? '' : 'data-[state=checked]:bg-teal-500 data-[state=unchecked]:bg-gray-300'}
                 />
                 <Label className={theme.text}>Ultra-fast processing</Label>
               </div>
@@ -610,7 +613,7 @@ function DashboardContent() {
                   <Input
                     value={data?.user?.apiKey || ""}
                     readOnly
-                    className="font-mono text-sm"
+                    className={`font-mono text-sm ${theme.input}`}
                   />
                   <Button
                     size="sm"
@@ -679,41 +682,18 @@ function DashboardContent() {
             <CardContent className="space-y-4">
               <div>
                 <div className="flex justify-between text-sm mb-2">
-                  <span>Daily Usage</span>
+                  <span className={`text-sm ${theme.subtext}`}>Daily Usage</span>
                   <span>
                     {data?.user?.usage?.todayCount || 0} /{" "}
                     {data?.user?.limits?.dailyLimit || 0}
                   </span>
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
+                <div className="w-full rounded-full h-2" style={{ background: darkMode ? '#222' : '#e0e7ef' }}>
                   <div
-                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    className="h-2 rounded-full transition-all duration-300"
                     style={{
-                      width: `${(() => {
-                        try {
-                          const todayCount = data?.user?.usage?.todayCount || 0;
-                          const dailyLimit =
-                            data?.user?.limits?.dailyLimit || 1;
-                          if (
-                            typeof todayCount !== "number" ||
-                            typeof dailyLimit !== "number"
-                          ) {
-                            return "0";
-                          }
-                          const percentage =
-                            dailyLimit > 0
-                              ? (todayCount / dailyLimit) * 100
-                              : 0;
-                          const result = Math.min(Math.max(percentage, 0), 100);
-                          return isNaN(result) ? "0" : result.toString();
-                        } catch (e) {
-                          console.error(
-                            "Error calculating usage percentage:",
-                            e,
-                          );
-                          return "0";
-                        }
-                      })()}%`,
+                      width: `${usagePercentage}%`,
+                      background: darkMode ? '#34d399' : '#38bdf8',
                     }}
                   />
                 </div>
@@ -756,9 +736,7 @@ function DashboardContent() {
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      Daily Limit
-                    </span>
+                    <span className={`text-sm ${theme.subtext}`}>Daily Limit</span>
                     <span className="font-medium">
                       {data?.user?.limits?.dailyLimit || 0}
                     </span>
@@ -767,9 +745,7 @@ function DashboardContent() {
 
                 <div>
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      Hourly Limit
-                    </span>
+                    <span className={`text-sm ${theme.subtext}`}>Hourly Limit</span>
                     <span className="font-medium">
                       {data?.user?.limits?.hourlyLimit || 0}
                     </span>
@@ -928,7 +904,7 @@ function DashboardContent() {
                 <div>
                   <h4 className="font-medium mb-2">cURL Example</h4>
                   <div
-                    className={`${theme.glass} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border overflow-x-auto`}
+                    className={`${theme.card} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border overflow-x-auto`}
                     style={{ border: "1px solid #fff2" }}
                   >
                     {`curl -X POST "https://x02.me/api/upload" \\
@@ -1055,7 +1031,7 @@ function DashboardContent() {
                 <div>
                   <h4 className="font-medium mb-2">Python Example</h4>
                   <div
-                    className={`${theme.glass} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border overflow-x-auto`}
+                    className={`${theme.card} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border overflow-x-auto`}
                     style={{ border: "1px solid #fff2" }}
                   >
                     {`import requests
@@ -1072,7 +1048,7 @@ print(response.text)  # Direct image URL`}
                 <div>
                   <h4 className="font-medium mb-2">JavaScript Example</h4>
                   <div
-                    className={`${theme.glass} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border overflow-x-auto`}
+                    className={`${theme.card} p-4 rounded-lg font-mono text-sm backdrop-blur-lg border overflow-x-auto`}
                     style={{ border: "1px solid #fff2" }}
                   >
                     {`const formData = new FormData();
@@ -1098,7 +1074,7 @@ fetch('https://x02.me/api/upload', {
                 Rate Limits & Guidelines
               </h3>
               <div
-                className={`${theme.glass} p-4 rounded-lg backdrop-blur-lg border`}
+                className={`${theme.card} p-4 rounded-lg backdrop-blur-lg border`}
                 style={{ border: "1px solid #fff2" }}
               >
                 <div className="grid md:grid-cols-2 gap-4 text-sm">
