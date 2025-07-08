@@ -36,6 +36,7 @@ export default function Auth() {
     username: "",
     password: "",
   });
+  const [inputsVisible, setInputsVisible] = useState(false);
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -51,6 +52,7 @@ export default function Auth() {
         localStorage.removeItem("x02_session");
       }
     }
+    setInputsVisible(true);
   }, [navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,157 +253,171 @@ export default function Auth() {
 
         <div className="grid gap-8 md:grid-cols-2">
           {/* Authentication Form */}
-          <Card className={theme.card + " p-4 max-w-sm w-full flex flex-col items-center text-center shadow-md mx-auto"}>
-            <CardHeader className="mb-2">
-              <CardTitle className="flex flex-col items-center gap-2">
-                <Shield className="h-8 w-8 text-teal-500 mb-1" />
-                <span className="text-xl font-bold">Get Started</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="w-full">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
-                <TabsList className="flex w-full bg-gray-100 rounded-lg overflow-hidden">
-                  <TabsTrigger value="register" className="flex-1 py-2 font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=inactive]:text-gray-500 data-[state=inactive]:bg-transparent transition-colors">Register</TabsTrigger>
-                  <TabsTrigger value="login" className="flex-1 py-2 font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=inactive]:text-gray-500 data-[state=inactive]:bg-transparent transition-colors">Login</TabsTrigger>
-                </TabsList>
-                <TabsContent value="register" className="mt-4 space-y-4">
-                  <form onSubmit={handleRegister} className="space-y-3">
-                    <FloatingInput
-                      id="register-username"
-                      name="username"
-                      type="text"
-                      label="Username"
-                      icon={<User className="h-5 w-5" />}
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      required
-                      minLength={3}
-                      maxLength={20}
-                      pattern="[a-zA-Z0-9_]+"
-                      title="Username must be 3-20 characters and contain only letters, numbers, and underscores"
-                    />
-                    <div className="relative">
-                      <FloatingInput
-                        id="register-password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        label="Password"
-                        icon={showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        required
-                        minLength={6}
-                      />
-                      <Button type="button" variant="ghost" size="sm" className="absolute right-2 top-1/2 -translate-y-1/2 z-10" onClick={() => setShowPassword(!showPassword)}>
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          <div className={inputsVisible ? "animate-slidefade" : "opacity-0"}>
+            <Card className={theme.card + " p-4 max-w-sm w-full flex flex-col items-center text-center shadow-md mx-auto"}>
+              <CardHeader className="mb-2">
+                <CardTitle className="flex flex-col items-center gap-2">
+                  <Shield className="h-8 w-8 text-teal-500 mb-1" />
+                  <span className="text-xl font-bold">Get Started</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="w-full">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+                  <TabsList className="flex w-full bg-gray-100 rounded-lg overflow-hidden">
+                    <TabsTrigger value="register" className="flex-1 py-2 font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=inactive]:text-gray-500 data-[state=inactive]:bg-transparent transition-colors">Register</TabsTrigger>
+                    <TabsTrigger value="login" className="flex-1 py-2 font-semibold data-[state=active]:bg-gradient-to-r data-[state=active]:from-teal-500 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=inactive]:text-gray-500 data-[state=inactive]:bg-transparent transition-colors">Login</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="register" className="mt-4 space-y-4">
+                    <form onSubmit={handleRegister} className="space-y-3">
+                      <div className={inputsVisible ? "animate-slidefade" : "opacity-0"}>
+                        <FloatingInput
+                          id="register-username"
+                          name="username"
+                          type="text"
+                          label="Username"
+                          icon={<User className="h-5 w-5" />}
+                          value={formData.username}
+                          onChange={handleInputChange}
+                          required
+                          minLength={3}
+                          maxLength={20}
+                          pattern="[a-zA-Z0-9_]+"
+                          title="Username must be 3-20 characters and contain only letters, numbers, and underscores"
+                        />
+                      </div>
+                      <div className={inputsVisible ? "animate-slidefade" : "opacity-0"}>
+                        <div className="relative">
+                          <FloatingInput
+                            id="register-password"
+                            name="password"
+                            type={showPassword ? "text" : "password"}
+                            label="Password"
+                            icon={showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            required
+                            minLength={6}
+                          />
+                          <Button type="button" variant="ghost" size="sm" className="absolute right-2 top-1/2 -translate-y-1/2 z-10" onClick={() => setShowPassword(!showPassword)}>
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                      <Button type="submit" disabled={loading} className={`w-full ${theme.button} mt-2`}>
+                        {loading ? <span>Creating Account...</span> : <><UserPlus className="h-4 w-4 mr-2" />Create Account</>}
                       </Button>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
-                    <Button type="submit" disabled={loading} className={`w-full ${theme.button} mt-2`}>
-                      {loading ? <span>Creating Account...</span> : <><UserPlus className="h-4 w-4 mr-2" />Create Account</>}
-                    </Button>
-                  </form>
-                </TabsContent>
-                <TabsContent value="login" className="mt-4 space-y-4">
-                  <form onSubmit={handleLogin} className="space-y-3">
-                    <FloatingInput
-                      id="login-username"
-                      name="username"
-                      type="text"
-                      label="Username"
-                      icon={<User className="h-5 w-5" />}
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      required
-                    />
-                    <div className="relative">
-                      <FloatingInput
-                        id="login-password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        label="Password"
-                        icon={showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        required
-                      />
-                      <Button type="button" variant="ghost" size="sm" className="absolute right-2 top-1/2 -translate-y-1/2 z-10" onClick={() => setShowPassword(!showPassword)}>
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </form>
+                  </TabsContent>
+                  <TabsContent value="login" className="mt-4 space-y-4">
+                    <form onSubmit={handleLogin} className="space-y-3">
+                      <div className={inputsVisible ? "animate-slidefade" : "opacity-0"}>
+                        <FloatingInput
+                          id="login-username"
+                          name="username"
+                          type="text"
+                          label="Username"
+                          icon={<User className="h-5 w-5" />}
+                          value={formData.username}
+                          onChange={handleInputChange}
+                          required
+                        />
+                      </div>
+                      <div className={inputsVisible ? "animate-slidefade" : "opacity-0"}>
+                        <div className="relative">
+                          <FloatingInput
+                            id="login-password"
+                            name="password"
+                            type={showPassword ? "text" : "password"}
+                            label="Password"
+                            icon={showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                            value={formData.password}
+                            onChange={handleInputChange}
+                            required
+                          />
+                          <Button type="button" variant="ghost" size="sm" className="absolute right-2 top-1/2 -translate-y-1/2 z-10" onClick={() => setShowPassword(!showPassword)}>
+                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                      </div>
+                      <Button type="submit" disabled={loading} className={`w-full ${theme.button} mt-2`}>
+                        {loading ? <span>Signing In...</span> : <><UserCheck className="h-4 w-4 mr-2" />Sign In</>}
                       </Button>
-                    </div>
-                    <Button type="submit" disabled={loading} className={`w-full ${theme.button} mt-2`}>
-                      {loading ? <span>Signing In...</span> : <><UserCheck className="h-4 w-4 mr-2" />Sign In</>}
-                    </Button>
-                  </form>
-                </TabsContent>
-              </Tabs>
-              <div className="mt-6 pt-4 border-t border-gray-200 w-full">
-                <Button onClick={handleAnonymous} className={`w-full ${darkMode ? 'border border-green-400 text-green-300 bg-black hover:bg-green-900/20 transition-colors' : theme.buttonOutline}`}>
-                  <Users className="h-4 w-4 mr-2" />
-                  Continue as Anonymous
-                </Button>
-                <p className="text-xs text-gray-500 mt-2">10 uploads per hour • Can upgrade anytime</p>
-              </div>
-            </CardContent>
-          </Card>
+                    </form>
+                  </TabsContent>
+                </Tabs>
+                <div className="mt-6 pt-4 border-t border-gray-200 w-full">
+                  <Button onClick={handleAnonymous} className={`w-full ${darkMode ? 'border border-green-400 text-green-300 bg-black hover:bg-green-900/20 transition-colors' : theme.buttonOutline}`}>
+                    <Users className="h-4 w-4 mr-2" />
+                    Continue as Anonymous
+                  </Button>
+                  <p className="text-xs text-gray-500 mt-2">10 uploads per hour • Can upgrade anytime</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Features Comparison */}
-          <Card className={theme.card + " p-4 max-w-sm w-full flex flex-col items-center text-center shadow-md mx-auto"}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-6 w-6" />
-                Account Benefits
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Upload className="h-5 w-5 text-primary mt-0.5" />
-                  <div>
-                    <h4 className="font-bold" style={{ color: darkMode ? '#90ffb0' : undefined }}>Higher Upload Limits</h4>
-                    <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-black'}`}>Registered users get 100 uploads per day vs 10 per hour for anonymous</p>
+          <div className={inputsVisible ? "animate-slidefade" : "opacity-0"}>
+            <Card className={theme.card + " p-4 max-w-sm w-full flex flex-col items-center text-center shadow-md mx-auto"}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-6 w-6" />
+                  Account Benefits
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Upload className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <h4 className="font-bold" style={{ color: darkMode ? '#90ffb0' : undefined }}>Higher Upload Limits</h4>
+                      <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-black'}`}>Registered users get 100 uploads per day vs 10 per hour for anonymous</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <User className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <h4 className="font-bold" style={{ color: darkMode ? '#90ffb0' : undefined }}>Personal Gallery</h4>
+                      <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-black'}`}>Keep track of all your uploads in your personal dashboard</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Shield className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <h4 className="font-bold" style={{ color: darkMode ? '#90ffb0' : undefined }}>Secure Storage</h4>
+                      <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-black'}`}>Your images are stored in your personal folder with API key protection</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Clock className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <h4 className="font-bold" style={{ color: darkMode ? '#90ffb0' : undefined }}>Usage Analytics</h4>
+                      <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-black'}`}>Monitor your usage, view statistics, and manage your uploads</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <User className="h-5 w-5 text-primary mt-0.5" />
-                  <div>
-                    <h4 className="font-bold" style={{ color: darkMode ? '#90ffb0' : undefined }}>Personal Gallery</h4>
-                    <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-black'}`}>Keep track of all your uploads in your personal dashboard</p>
+                {/* Comparison Table */}
+                <div className={`${darkMode ? 'bg-zinc-900 border border-green-800' : 'bg-blue-50'} rounded p-4 mt-6 w-full`}>
+                  <h4 className={`font-semibold mb-3 text-center ${darkMode ? 'text-green-200' : 'text-gray-900'}`}>Account Comparison</h4>
+                  <div className="grid grid-cols-2 gap-y-2 text-sm">
+                    <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>Anonymous:</div>
+                    <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-gray-900'}`}>10 uploads/hour</div>
+                    <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>Registered:</div>
+                    <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-blue-600'}`}>100 uploads/day</div>
+                    <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>Personal Gallery:</div>
+                    <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-blue-600'}`}>✓</div>
+                    <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>API Access:</div>
+                    <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-blue-600'}`}>✓</div>
+                    <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>Custom Watermark:</div>
+                    <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-blue-600'}`}>✓</div>
+                    <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>Custom Subdomain:</div>
+                    <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-blue-600'}`}>✓</div>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <Shield className="h-5 w-5 text-primary mt-0.5" />
-                  <div>
-                    <h4 className="font-bold" style={{ color: darkMode ? '#90ffb0' : undefined }}>Secure Storage</h4>
-                    <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-black'}`}>Your images are stored in your personal folder with API key protection</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <Clock className="h-5 w-5 text-primary mt-0.5" />
-                  <div>
-                    <h4 className="font-bold" style={{ color: darkMode ? '#90ffb0' : undefined }}>Usage Analytics</h4>
-                    <p className={`text-sm ${darkMode ? 'text-green-200' : 'text-black'}`}>Monitor your usage, view statistics, and manage your uploads</p>
-                  </div>
-                </div>
-              </div>
-              {/* Comparison Table */}
-              <div className={`${darkMode ? 'bg-zinc-900 border border-green-800' : 'bg-blue-50'} rounded p-4 mt-6 w-full`}>
-                <h4 className={`font-semibold mb-3 text-center ${darkMode ? 'text-green-200' : 'text-gray-900'}`}>Account Comparison</h4>
-                <div className="grid grid-cols-2 gap-y-2 text-sm">
-                  <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>Anonymous:</div>
-                  <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-gray-900'}`}>10 uploads/hour</div>
-                  <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>Registered:</div>
-                  <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-blue-600'}`}>100 uploads/day</div>
-                  <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>Personal Gallery:</div>
-                  <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-blue-600'}`}>✓</div>
-                  <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>API Access:</div>
-                  <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-blue-600'}`}>✓</div>
-                  <div className={`${darkMode ? 'text-green-300' : 'text-gray-700'} font-medium`}>Custom Watermark:</div>
-                  <div className={`text-right font-bold ${darkMode ? 'text-green-200' : 'text-blue-600'}`}>✓</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
 
@@ -411,6 +427,15 @@ export default function Auth() {
       >
         &copy; {new Date().getFullYear()} X02 Image Uploader
       </footer>
+      <style>{`
+        @keyframes slidefade {
+          0% { opacity: 0; transform: translateY(32px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slidefade {
+          animation: slidefade 0.7s cubic-bezier(.68,-0.55,.27,1.55) both;
+        }
+      `}</style>
     </div>
   );
 }
