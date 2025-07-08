@@ -63,10 +63,10 @@ export function createServer() {
   app.use(express.urlencoded({ extended: true }));
 
   // Serve uploaded images statically
-  app.use("/api/images", express.static("uploads"));
+  app.use("/api/i", express.static("uploads"));
 
   // Serve user-specific images
-  app.use("/api/images/users", express.static("uploads/users"));
+  app.use("/api/i/users", express.static("uploads/users"));
 
   // Public endpoints (no API key required)
   app.get("/api/ping", (_req, res) => {
@@ -74,9 +74,9 @@ export function createServer() {
   });
 
   // Subdomain-based image serving routes
-  // These routes will handle requests like kapoor.x02.me/api/images/photo.png
-  app.get("/api/images/:filename", handleSubdomainImages);
-  app.get("/api/images", listSubdomainImages);
+  // These routes will handle requests like kapoor.x02.me/api/i/photo.png
+  app.get("/api/i/:filename", handleSubdomainImages);
+  app.get("/api/i", listSubdomainImages);
 
   // Authentication endpoints
   app.post("/api/auth/register", registerUser);
@@ -129,7 +129,7 @@ export function createServer() {
   );
 
   // Image deletion endpoint (API key optional for user files)
-  app.delete("/api/images/:filename", optionalApiKey, handleDeleteImage);
+  app.delete("/api/i/:filename", optionalApiKey, handleDeleteImage);
 
   // Admin authentication endpoints
   app.post("/api/admin/request-otp", requestAdminOTP);
@@ -161,7 +161,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(`📱 Frontend: http://localhost:${port}`);
     console.log(`🔧 API: http://localhost:${port}/api`);
     console.log(
-      `🌐 Subdomain images: https://{username}.x02.me/api/images/{filename}`,
+      `🌐 Subdomain images: https://{username}.x02.me/api/i/{filename}`,
     );
   });
 }

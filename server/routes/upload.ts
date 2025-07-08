@@ -282,18 +282,18 @@ export const handleUpload: RequestHandler = async (req, res) => {
         const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
         const user = users.find((u: any) => u.apiKey === apiKey);
         if (user) {
-          imageUrl = `https://${user.username.toLowerCase()}.x02.me/api/images/${finalFilename}`;
+          imageUrl = `https://${user.username.toLowerCase()}.x02.me/api/i/${finalFilename}`;
         } else {
-          imageUrl = `https://x02.me/api/images/${finalFilename}`;
+          imageUrl = `https://x02.me/api/i/${finalFilename}`;
         }
       } catch (error) {
-        imageUrl = `https://x02.me/api/images/${finalFilename}`;
+        imageUrl = `https://x02.me/api/i/${finalFilename}`;
       }
     } else {
-      imageUrl = `https://x02.me/api/images/${finalFilename}`;
+      imageUrl = `https://x02.me/api/i/${finalFilename}`;
     }
   } else {
-    imageUrl = `https://x02.me/api/images/${finalFilename}`;
+    imageUrl = `https://x02.me/api/i/${finalFilename}`;
   }
 
   // Track the upload with API key usage

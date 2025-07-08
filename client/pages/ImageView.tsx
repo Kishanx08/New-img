@@ -36,7 +36,7 @@ export default function ImageView() {
       setTimeout(() => {
         setImageData({
           id: imageId,
-          url: `/api/images/${imageId}.jpg`,
+          url: `/api/i/${imageId}.jpg`,
           originalName: "sample-image.jpg",
           size: 2048576,
           uploadedAt: new Date().toISOString(),
