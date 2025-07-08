@@ -75,7 +75,7 @@ export default function Index() {
     message: string;
     type: "success" | "error";
   } | null>(null);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -302,7 +302,6 @@ export default function Index() {
     ? {
         bg: "bg-black",
         card: "bg-black/60 border-green-800/40 text-white",
-        glass: "bg-black/70 border-green-700/40 text-green-300",
         input: "bg-black/80 text-white border-green-800/40",
         text: "text-white",
         accent: "text-green-300 border-green-400",
@@ -311,15 +310,14 @@ export default function Index() {
         buttonOutline: "border-green-700 text-green-300 hover:bg-green-900/30",
       }
     : {
-        bg: "bg-white",
-        card: "bg-white/80 border-green-300/40 text-black",
-        glass: "bg-white/90 border-green-300/40 text-green-700",
-        input: "bg-white text-black border-green-300/40",
-        text: "text-black",
-        accent: "text-green-700 border-green-500",
-        subtext: "text-green-700/70",
-        button: "bg-green-600 hover:bg-green-500 text-white",
-        buttonOutline: "border-green-600 text-green-700 hover:bg-green-100/30",
+        bg: "bg-gradient-to-br from-gray-100 via-blue-100 to-teal-50",
+        card: "bg-white border border-gray-200 rounded-xl shadow-md text-gray-900",
+        input: "bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:border-teal-400 focus:ring-1 focus:ring-teal-200",
+        text: "text-gray-900",
+        accent: "text-teal-600 border-teal-500",
+        subtext: "text-gray-500",
+        button: "bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-medium rounded px-4 py-2 shadow",
+        buttonOutline: "border border-teal-500 text-teal-600 hover:bg-teal-50 font-medium rounded px-4 py-2",
       };
 
   if (!mounted) {
@@ -335,44 +333,42 @@ export default function Index() {
 
   return (
     <div
-      className={`min-h-screen relative overflow-hidden ${theme.bg} ${theme.text}`}
+      className={`min-h-screen relative overflow-hidden ${theme.bg} ${theme.text}${darkMode ? ' dark' : ''}`}
       style={{ fontFamily: "Inter, Poppins, Montserrat, sans-serif" }}
     >
       {/* Toast/response message */}
       {toast && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div
-            className={`px-8 py-4 rounded-xl shadow-lg border ${theme.glass} backdrop-blur-lg text-center text-lg font-medium pointer-events-auto`}
-            style={{
-              minWidth: 260,
-              border: "1.5px solid #fff2",
-              boxShadow: "0 2px 24px #00ff8033",
-            }}
+            className={`px-8 py-4 rounded-xl shadow-lg border ${theme.card} text-center text-lg font-medium pointer-events-auto`}
+            style={{ minWidth: 260 }}
           >
             {toast.message}
           </div>
         </div>
       )}
       <header
-        className={`w-full border-b ${theme.card} backdrop-blur-md py-4 mb-8 relative z-10`}
+        className={`w-full border-b ${theme.card} py-4 mb-8 relative z-10`}
       >
         <div className="max-w-2xl mx-auto flex items-center gap-4 px-4">
           <img src={favicon} alt="logo" className="w-10 h-10 rounded-lg" />
           <div className="flex-1">
             <h1
-              className={`text-2xl font-bold tracking-tight inline-block border-b-2 ${theme.accent} pb-1`}
+              className="text-2xl font-bold tracking-tight inline-flex items-center gap-2 pb-1"
+              style={{ fontFamily: 'Poppins, Inter, sans-serif' }}
             >
+              <span className="w-3 h-3 rounded-full bg-[#E23744]"></span>
               X02 Image Uploader
             </h1>
           </div>
           <div className="flex items-center gap-3">
             {userSession && !userSession.isAnonymous && (
-              <div className="text-sm text-green-300">
+              <div className="text-sm text-blue-600">
                 Welcome, {(userSession as UserSession).username}
               </div>
             )}
             {userSession?.isAnonymous && (
-              <div className="text-sm text-green-300/70">Anonymous User</div>
+              <div className="text-sm text-blue-400">Anonymous User</div>
             )}
 
             <div className="flex gap-2">
@@ -380,7 +376,7 @@ export default function Index() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-green-400/40 text-green-300 hover:bg-green-900/20"
+                  className="border-blue-500 text-blue-600 hover:bg-blue-50"
                   onClick={() => {
                     localStorage.removeItem("x02_session");
                     navigate("/auth");
@@ -395,7 +391,7 @@ export default function Index() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-green-400/40 text-green-300 hover:bg-green-900/20"
+                  className="border-blue-500 text-blue-600 hover:bg-blue-50"
                   onClick={() => navigate("/dashboard")}
                 >
                   <User className="h-4 w-4 mr-2" />
@@ -406,7 +402,7 @@ export default function Index() {
               <Button
                 size="sm"
                 variant="outline"
-                className="border-red-400/40 text-red-300 hover:bg-red-900/20"
+                className="border-red-400 text-red-500 hover:bg-red-50"
                 onClick={() => {
                   localStorage.removeItem("x02_session");
                   navigate("/auth");
@@ -418,7 +414,7 @@ export default function Index() {
 
               <Button
                 size="sm"
-                className="border border-green-400/40 bg-transparent text-green-300 hover:bg-green-900/20"
+                className={darkMode ? 'border border-green-400 text-green-300 bg-black hover:bg-green-900/20 transition-colors' : 'border border-blue-500 bg-transparent text-blue-600 hover:bg-blue-50'}
                 onClick={() => setDarkMode((d) => !d)}
               >
                 {darkMode ? "Light Mode" : "Dark Mode"}
@@ -430,17 +426,13 @@ export default function Index() {
       <main className="max-w-2xl mx-auto px-4 relative z-10">
         <section className="mb-8">
           <div
-            className={`rounded-xl border ${theme.card} backdrop-blur-lg p-8 text-center transition-colors ${dragActive ? "ring-2 ring-green-400" : ""}`}
+            className={`rounded-lg border ${theme.card} p-8 text-center transition-colors ${dragActive ? "ring-2 ring-blue-400" : ""}`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
             onDragOver={handleDrag}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            style={{
-              cursor: uploading ? "not-allowed" : "pointer",
-              border: "1.5px solid #fff2",
-              boxShadow: "0 2px 24px #00ff8033",
-            }}
+            style={{ cursor: uploading ? "not-allowed" : "pointer" }}
           >
             <input
               ref={fileInputRef}
@@ -452,19 +444,19 @@ export default function Index() {
             />
             {uploading ? (
               <>
-                <div className="text-green-300 font-semibold mb-2">
+                <div className="text-blue-600 font-semibold mb-2">
                   Uploading...
                 </div>
                 {uploadProgress !== null ? (
-                  <div className="w-full h-3 bg-green-900/30 rounded-full overflow-hidden">
+                  <div className="w-full h-3 bg-blue-100 rounded-full overflow-hidden">
                     <div
-                      className="h-3 bg-green-400 transition-all duration-200"
+                      className="h-3 bg-blue-400 transition-all duration-200"
                       style={{ width: `${uploadProgress}%` }}
                     />
                   </div>
                 ) : (
                   <div className="flex justify-center items-center h-3">
-                    <span className="animate-spin inline-block w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full" />
+                    <span className="animate-spin inline-block w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full" />
                   </div>
                 )}
               </>
@@ -473,15 +465,15 @@ export default function Index() {
                 <div className="text-lg font-medium mb-2">
                   Drag & drop or click to upload an image
                 </div>
-                <div className="text-green-300 text-sm">
+                <div className="text-blue-600 text-sm">
                   JPG, PNG, GIF, etc. (max 30MB)
                   {userSession?.isAnonymous && (
-                    <span className="block text-yellow-300 text-xs mt-1">
+                    <span className="block text-blue-400 text-xs mt-1">
                       Anonymous: 10 uploads/hour
                     </span>
                   )}
                   {userSession && !userSession.isAnonymous && (
-                    <span className="block text-green-400 text-xs mt-1">
+                    <span className="block text-blue-500 text-xs mt-1">
                       Registered:{" "}
                       {(userSession as UserSession).limits.dailyLimit}{" "}
                       uploads/day
@@ -493,7 +485,7 @@ export default function Index() {
           </div>
         </section>
         <section>
-          <h2 className="text-lg font-semibold mb-4">Uploaded Images</h2>
+          <h2 className="text-lg font-semibold mb-4" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>Uploaded Images</h2>
           {uploadedImages.length === 0 ? (
             <div className={`${theme.subtext} text-base`}>
               No images uploaded yet.
@@ -503,30 +495,26 @@ export default function Index() {
               {uploadedImages.map((image, idx) => (
                 <div
                   key={idx}
-                  className={`flex items-center gap-4 ${theme.card} rounded-lg p-3 backdrop-blur-lg transition-all duration-200 hover:shadow-green-700/20`}
-                  style={{
-                    border: "1.5px solid #fff2",
-                    boxShadow: "0 2px 24px #00ff8033",
-                  }}
+                  className={`flex items-center gap-4 ${theme.card} p-3 transition-all duration-200 hover:shadow-md`}
                 >
                   <img
                     src={image.url}
                     alt={image.originalName}
-                    className="w-16 h-16 object-cover rounded border border-green-900/40"
+                    className="w-16 h-16 object-cover rounded border border-gray-200"
                   />
                   <div className="flex-1">
-                    <div className="font-medium">{image.originalName}</div>
-                    <div className="text-green-300 text-xs">
+                    <div className="font-medium" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>{image.originalName}</div>
+                    <div className="text-blue-600 text-xs">
                       {formatFileSize(image.size)} •{" "}
                       {new Date(image.uploadedAt).toLocaleDateString()}
                     </div>
-                    <div className="text-green-400 text-xs break-all">
+                    <div className="text-blue-500 text-xs break-all">
                       {image.url}
                     </div>
                   </div>
                   <Button
                     size="sm"
-                    className={`${theme.button} mr-2 shadow-none hover:shadow-green-400/30 transition-shadow`}
+                    className={`${theme.button} mr-2 shadow-none hover:shadow-md transition-shadow`}
                     onClick={() => copyToClipboard(image.url)}
                   >
                     Copy Link
@@ -534,7 +522,7 @@ export default function Index() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className={`${theme.buttonOutline} hover:shadow-green-400/20 transition-shadow mr-2`}
+                    className={`${theme.buttonOutline} hover:shadow-md transition-shadow mr-2`}
                     onClick={() => window.open(image.url, "_blank")}
                   >
                     Open
@@ -544,7 +532,7 @@ export default function Index() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-red-500 text-red-500 hover:bg-red-500/10"
+                        className="border-red-500 text-red-500 hover:bg-red-50"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -586,7 +574,7 @@ export default function Index() {
           </DialogHeader>
           {editPreview && (
             <div className="flex flex-col items-center gap-4">
-              <div className="relative w-64 h-64 bg-muted flex items-center justify-center select-none">
+              <div className="relative w-64 h-64 bg-gray-100 flex items-center justify-center select-none rounded-lg">
                 <img
                   src={editPreview}
                   alt="Preview"
@@ -601,11 +589,13 @@ export default function Index() {
                 setEditModalOpen(false);
                 handleFileUpload(editImage);
               }}
+              className={theme.button}
+              style={{ fontFamily: 'Poppins, Inter, sans-serif' }}
             >
               Upload
             </Button>
             <DialogClose asChild>
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" className={theme.buttonOutline}>Cancel</Button>
             </DialogClose>
           </DialogFooter>
         </DialogContent>

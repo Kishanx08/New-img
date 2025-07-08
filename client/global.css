@@ -104,7 +104,7 @@
 
   .glass-effect {
     background: rgba(24,24,24,0.98) !important;
-    @apply backdrop-blur-xl border border-border/50;
+    @apply backdrop-blur-xl border border-gray-200/50;
   }
 
   .neon-border {
@@ -113,8 +113,8 @@
 
   .cyber-card {
     background: rgba(24,24,24,0.95) !important;
-    @apply backdrop-blur-md border border-border/30
-           hover:border-primary/50 hover:shadow-lg hover:shadow-primary/20
+    @apply backdrop-blur-md border border-gray-200/30
+           hover:border-blue-500/50 hover:shadow-lg hover:shadow-blue-500/20
            transition-all duration-300;
   }
 
