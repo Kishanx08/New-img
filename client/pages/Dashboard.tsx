@@ -13,6 +13,7 @@ import {
   Database,
   Download,
   Image,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -47,6 +48,7 @@ import {
 } from "@shared/types";
 import { UserSession, AnonymousSession } from "@shared/auth-types";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import favicon from "/favicon.ico";
 
 interface Upload {
   filename: string;
@@ -542,42 +544,42 @@ function DashboardContent() {
     >
       {/* Header */}
       <header
-        className={`w-full border-b ${theme.card} backdrop-blur-md py-4 mb-8 relative z-10`}
+        className={`w-full border-b ${theme.card} py-4 mb-8 relative z-10`}
       >
-        <div className="max-w-6xl mx-auto flex items-center gap-4 px-4">
+        <div className="max-w-2xl mx-auto flex items-center gap-4 px-4">
+          <img src={favicon} alt="logo" className="w-10 h-10 rounded-lg" />
           <div className="flex-1">
             <h1
-              className={`text-2xl font-bold tracking-tight inline-block border-b-2 ${theme.accent} pb-1 flex items-center gap-3`}
+              className="text-2xl font-bold tracking-tight inline-flex items-center gap-2 pb-1"
+              style={{ fontFamily: 'Poppins, Inter, sans-serif' }}
             >
-              <Activity className="h-8 w-8" />
-              API Dashboard
+              <span className="w-3 h-3 rounded-full bg-[#E23744]"></span>
+              X02 Image Uploader
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            {userSession &&
-              !userSession.isAnonymous &&
-              "username" in userSession && (
-                <div className={`text-sm ${theme.accent}`}>
-                  Welcome, {userSession.username}
-                </div>
-              )}
-            <Button
-              size="sm"
-              className={`${theme.buttonOutline} border`}
-              onClick={() => {
-                localStorage.removeItem("x02_session");
-                navigate("/auth");
-              }}
-            >
-              Logout
-            </Button>
-            <Button
-              size="sm"
-              className={`${theme.buttonOutline} border`}
-              onClick={() => setDarkMode((d) => !d)}
-            >
-              {darkMode ? "Light" : "Dark"}
-            </Button>
+            {userSession && !userSession.isAnonymous && (
+              <div className="text-sm text-blue-600">
+                Welcome, {(userSession as UserSession).username}
+              </div>
+            )}
+            {userSession?.isAnonymous && (
+              <div className="text-sm text-blue-400">Anonymous User</div>
+            )}
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                onClick={() => {
+                  localStorage.removeItem("x02_session");
+                  navigate("/auth");
+                }}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>
@@ -606,9 +608,7 @@ function DashboardContent() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Your Key
-                </label>
+                <label className={`text-sm ${theme.subtext}`}>Your Key</label>
                 <div className="flex gap-2 mt-1">
                   <Input
                     value={data?.user?.apiKey || ""}
@@ -701,13 +701,13 @@ function DashboardContent() {
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-muted-foreground">Remaining:</span>
+                  <span className={`text-sm ${theme.subtext}`}>Remaining:</span>
                   <div className="font-medium">
                     {data?.user?.usage?.remaining || 0}
                   </div>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Last Used:</span>
+                  <span className={`text-sm ${theme.subtext}`}>Last Used:</span>
                   <div className="font-medium text-xs">
                     {data?.user?.usage?.lastUsed
                       ? formatDate(data.user.usage.lastUsed)
@@ -753,10 +753,8 @@ function DashboardContent() {
                 </div>
               </div>
 
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <div className="text-xs text-muted-foreground">
-                  Limits reset daily at midnight UTC
-                </div>
+              <div className="p-3 rounded-lg" style={{ background: darkMode ? 'rgba(34,255,170,0.07)' : 'rgba(56,189,248,0.12)' }}>
+                <span className={`text-xs ${theme.subtext}`}>Limits reset daily at midnight UTC</span>
               </div>
             </CardContent>
           </Card>
@@ -799,7 +797,7 @@ function DashboardContent() {
                 {data.uploads?.map((upload, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-4 p-3 bg-muted/30 rounded-lg"
+                    className={`flex items-center gap-4 p-3 rounded-lg border transition-all duration-200 ${darkMode ? 'bg-black/40 border-green-100/10 hover:bg-green-900/10' : 'bg-cyan-100/40 border-cyan-200 hover:bg-cyan-100/80 shadow'} group`}
                   >
                     <img
                       src={upload.url}
@@ -807,44 +805,40 @@ function DashboardContent() {
                       className="w-12 h-12 object-cover rounded border"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">
-                        {upload.filename}
+                      <div className={`font-medium truncate ${theme.text}`}>{upload.filename}</div>
+                      <div className={`text-sm ${theme.subtext}`}>
+                        {formatFileSize(upload.size)} • {formatDate(upload.timestamp)}
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatFileSize(upload.size)} •{" "}
-                        {formatDate(upload.timestamp)}
-                      </div>
-                      <div className="text-xs text-muted-foreground break-all">
-                        {upload.url}
-                      </div>
+                      <div className={`text-xs break-all ${theme.subtext}`}>{upload.url}</div>
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
                       <Button
-                        variant="outline"
                         size="sm"
+                        className={`${theme.button} shadow-none hover:shadow-md transition-shadow`}
                         onClick={() => copyToClipboard(upload.url)}
+                        title="Copy URL"
                       >
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-4 w-4 text-white" />
                       </Button>
                       <Button
-                        variant="outline"
                         size="sm"
+                        className={`${theme.buttonOutline} hover:bg-blue-50`}
                         onClick={() => window.open(upload.url, "_blank")}
+                        title="Open Image"
                       >
-                        <ExternalLink className="h-4 w-4" />
+                        <ExternalLink className="h-4 w-4 text-blue-500" />
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm">
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                          <Button size="sm" className={`${theme.buttonOutline} hover:bg-red-50`} title="Delete Image">
+                            <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Image?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will permanently delete "{upload.filename}".
-                              This action cannot be undone.
+                              This will permanently delete "{upload.filename}". This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
