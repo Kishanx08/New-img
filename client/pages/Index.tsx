@@ -559,7 +559,7 @@ export default function Index() {
                   </div>
                   <Button
                     size="sm"
-                    className={`${theme.button} mr-2 shadow-none hover:shadow-md transition-shadow`}
+                    className={`${theme.button} mr-2 rounded-xl shadow-md hover:shadow-lg transition-all backdrop-blur-md bg-white/80 dark:bg-black/60 border-none`}
                     onClick={() => copyToClipboard(image.url)}
                   >
                     Copy Link
@@ -567,7 +567,7 @@ export default function Index() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className={`${theme.buttonOutline} hover:shadow-md transition-shadow mr-2`}
+                    className={`${theme.buttonOutline} mr-2 rounded-xl shadow-md hover:shadow-lg transition-all backdrop-blur-md bg-white/70 dark:bg-black/60 border-none`}
                     onClick={() => window.open(image.url, "_blank")}
                   >
                     Open

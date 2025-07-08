@@ -865,7 +865,7 @@ function DashboardContent() {
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => deleteImage(upload.filename)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              className={`rounded-lg px-6 py-2 font-semibold shadow-md transition-all border-none focus:outline-none focus:ring-2 focus:ring-red-400/60 focus:ring-offset-2 ${darkMode ? 'bg-red-700/80 text-white hover:bg-red-800/90' : 'bg-red-500/90 text-white hover:bg-red-600/90'} backdrop-blur-md`}
                             >
                               Delete
                             </AlertDialogAction>
