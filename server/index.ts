@@ -135,6 +135,31 @@ export function createServer() {
     next();
   });
 
+  // Custom fallback handler for /i/:filename when subdomains are disabled
+  app.get('/i/:filename', async (req, res, next) => {
+    const mode = getSubdomainMode();
+    if (mode !== 'disabled') return next();
+    const filename = req.params.filename;
+    const rootPath = path.join(process.cwd(), 'uploads', filename);
+    // 1. Check root uploads directory
+    if (fs.existsSync(rootPath) && fs.statSync(rootPath).isFile()) {
+      return res.sendFile(rootPath);
+    }
+    // 2. Search user folders
+    const usersDir = path.join(process.cwd(), 'uploads', 'users');
+    if (fs.existsSync(usersDir)) {
+      const users = fs.readdirSync(usersDir);
+      for (const user of users) {
+        const userFile = path.join(usersDir, user, filename);
+        if (fs.existsSync(userFile) && fs.statSync(userFile).isFile()) {
+          return res.sendFile(userFile);
+        }
+      }
+    }
+    // 3. Not found
+    return res.status(404).send('Image not found');
+  });
+
   // Serve uploaded images statically
   app.use("/i", express.static("uploads"));
   app.use("/i/users", express.static("uploads/users"));
