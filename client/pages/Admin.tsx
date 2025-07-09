@@ -124,7 +124,7 @@ export default function Admin() {
   const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
   const [adminToken, setAdminToken] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [subdomainMode, setSubdomainMode] = useState<'disabled' | 'enabled' | 'per-user'>('enabled');
+  const [subdomainMode, setSubdomainMode] = useState<'enabled' | 'disabled'>('enabled');
   const [subdomainUserOverrides, setSubdomainUserOverrides] = useState<{[id: string]: boolean}>({});
   const [subdomainLoading, setSubdomainLoading] = useState(false);
   const [subdomainError, setSubdomainError] = useState<string | null>(null);
@@ -1383,41 +1383,35 @@ export default function Admin() {
             <DialogTitle>Admin Settings</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
-            <div>
-              <label className="block font-semibold mb-2">Subdomain Feature</label>
-              <div className="flex flex-col gap-2">
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="subdomainMode" value="disabled" checked={subdomainMode === 'disabled'} onChange={() => setSubdomainMode('disabled')} />
-                  Disable for all users
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="subdomainMode" value="enabled" checked={subdomainMode === 'enabled'} onChange={() => setSubdomainMode('enabled')} />
-                  Enable for all users
-                </label>
-                <label className="flex items-center gap-2">
-                  <input type="radio" name="subdomainMode" value="per-user" checked={subdomainMode === 'per-user'} onChange={() => setSubdomainMode('per-user')} />
-                  Per-user (manage below)
-                </label>
-              </div>
+            {/* Subdomain mode radio buttons (remove per-user) */}
+            <label className="block font-semibold mb-2">Subdomain Feature</label>
+            <div className="flex gap-4 mb-4">
+              <label className="inline-flex items-center">
+                <input type="radio" name="subdomainMode" value="enabled" checked={subdomainMode === 'enabled'} onChange={() => setSubdomainMode('enabled')} className="form-radio text-green-600 focus:ring-green-500" />
+                <span className="ml-2">Enabled (All users get subdomain)</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input type="radio" name="subdomainMode" value="disabled" checked={subdomainMode === 'disabled'} onChange={() => setSubdomainMode('disabled')} className="form-radio text-red-600 focus:ring-red-500" />
+                <span className="ml-2">Disabled (Only whitelisted users)</span>
+              </label>
             </div>
-            {subdomainMode === 'per-user' && (
-              <div>
-                <label className="block font-semibold mb-2">User Subdomain Access</label>
-                <Input
-                  placeholder="Search users..."
-                  value={userSearch}
-                  onChange={e => setUserSearch(e.target.value)}
-                  className="mb-3"
-                />
-                <div className="max-h-60 overflow-y-auto space-y-2">
-                  {users.filter(u => u.username.toLowerCase().includes(userSearch.toLowerCase())).map(user => (
-                    <div key={user.id} className="flex items-center justify-between p-2 rounded bg-[#181A1B] border border-[#222]">
-                      <span>{user.username}</span>
-                      {subdomainLoading && <span>Loading...</span>}
-                      {subdomainError && <span className="text-red-500">{subdomainError}</span>}
-                      <Switch
+
+            {/* Whitelist UI, only show when disabled */}
+            {subdomainMode === 'disabled' && (
+              <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-md border border-zinc-200 dark:border-zinc-700 p-6 mb-6">
+                <label className="block font-semibold mb-2 text-green-700 dark:text-green-300">User Subdomain Whitelist</label>
+                <p className="text-xs text-gray-500 dark:text-green-200 mb-4">Select users who should have subdomain access even when globally disabled.</p>
+                {subdomainLoading && <span>Loading...</span>}
+                {subdomainError && <span className="text-red-500">{subdomainError}</span>}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {users.map(user => (
+                    <div key={user.id} className="flex items-center bg-zinc-50 dark:bg-zinc-800 rounded px-3 py-2 border border-zinc-100 dark:border-zinc-700">
+                      <span className="flex-1 font-medium text-zinc-800 dark:text-zinc-100">{user.username}</span>
+                      <input
+                        type="checkbox"
                         checked={!!subdomainUserOverrides[user.id]}
-                        onCheckedChange={v => handleSubdomainToggle(user.id, v)}
+                        onChange={e => handleSubdomainToggle(user.id, e.target.checked)}
+                        className="form-checkbox h-5 w-5 text-green-600 focus:ring-green-500 ml-2"
                       />
                     </div>
                   ))}

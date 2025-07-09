@@ -80,8 +80,6 @@ export function canUseSubdomain(username: string) {
   const settings = getSubdomainSettings();
   if (mode === 'enabled') return true;
   if (mode === 'disabled') return settings[username] === true;
-  // If you want 'per-user' to behave the same as 'disabled', use the same logic
-  if (mode === 'per-user') return settings[username] === true;
   return false;
 }
 
