@@ -13,6 +13,7 @@ import {
 import * as RechartsPrimitive from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { Switch } from '@/components/ui/switch';
 
 import { 
   Activity, 
@@ -122,6 +123,10 @@ export default function Admin() {
   const [otpCode, setOtpCode] = useState('');
   const [otpExpiry, setOtpExpiry] = useState<Date | null>(null);
   const [adminToken, setAdminToken] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [subdomainMode, setSubdomainMode] = useState<'disabled' | 'enabled' | 'per-user'>('enabled');
+  const [subdomainUserOverrides, setSubdomainUserOverrides] = useState<{[id: string]: boolean}>({});
+  const [userSearch, setUserSearch] = useState('');
   const { toast } = useToast();
 
   // Fetch real user data for Users tab
@@ -646,7 +651,7 @@ export default function Admin() {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Refresh
               </Button>
-              <Button size="sm" className="bg-[#23272A] border border-[#00E6E6] text-[#00E6E6] hover:bg-[#23272A]/80">
+              <Button size="sm" className="bg-[#23272A] border border-[#00E6E6] text-[#00E6E6] hover:bg-[#23272A]/80" onClick={() => setSettingsOpen(true)}>
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
               </Button>
@@ -1281,6 +1286,60 @@ export default function Admin() {
           )}
           <DialogFooter>
             <Button onClick={() => { setModalType(null); setNewApiKey(null); }}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Modal */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Admin Settings</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div>
+              <label className="block font-semibold mb-2">Subdomain Feature</label>
+              <div className="flex flex-col gap-2">
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="subdomainMode" value="disabled" checked={subdomainMode === 'disabled'} onChange={() => setSubdomainMode('disabled')} />
+                  Disable for all users
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="subdomainMode" value="enabled" checked={subdomainMode === 'enabled'} onChange={() => setSubdomainMode('enabled')} />
+                  Enable for all users
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="subdomainMode" value="per-user" checked={subdomainMode === 'per-user'} onChange={() => setSubdomainMode('per-user')} />
+                  Per-user (manage below)
+                </label>
+              </div>
+            </div>
+            {subdomainMode === 'per-user' && (
+              <div>
+                <label className="block font-semibold mb-2">User Subdomain Access</label>
+                <Input
+                  placeholder="Search users..."
+                  value={userSearch}
+                  onChange={e => setUserSearch(e.target.value)}
+                  className="mb-3"
+                />
+                <div className="max-h-60 overflow-y-auto space-y-2">
+                  {users.filter(u => u.username.toLowerCase().includes(userSearch.toLowerCase())).map(user => (
+                    <div key={user.id} className="flex items-center justify-between p-2 rounded bg-[#181A1B] border border-[#222]">
+                      <span>{user.username}</span>
+                      <Switch
+                        checked={!!subdomainUserOverrides[user.id]}
+                        onCheckedChange={v => setSubdomainUserOverrides(o => ({ ...o, [user.id]: v }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setSettingsOpen(false)}>Close</Button>
+            <Button className="bg-[#00E6E6] text-black hover:bg-[#00E6E6]/80">Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

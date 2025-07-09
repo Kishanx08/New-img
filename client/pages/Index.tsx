@@ -27,7 +27,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
 import { UploadResponse, DeleteImageResponse } from "@shared/api";
 import { UserSession, AnonymousSession } from "@shared/auth-types";
 import favicon from "/favicon.ico";
@@ -67,7 +66,6 @@ export default function Index() {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
-  const [showGallery, setShowGallery] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [userSession, setUserSession] = useState<
     UserSession | AnonymousSession | null
@@ -199,9 +197,10 @@ export default function Index() {
           setUploadProgress(null);
           setUploading(false);
           if (xhr.status >= 200 && xhr.status < 300) {
-            const url = xhr.responseText;
+            const url = xhr.responseText.trim();
+            console.log("Upload successful, URL:", url); // Debug log
             const newImage: UploadedImage = {
-              id: file.name,
+              id: `${file.name}_${Date.now()}`, // Make ID unique
               url,
               originalName: file.name,
               size: file.size,
@@ -209,11 +208,16 @@ export default function Index() {
               apiKeyUsed:
                 userSession && !userSession.isAnonymous ? true : undefined,
             };
-            setUploadedImages((prev) => [newImage, ...prev]);
-            setShowGallery(true);
+            console.log("New image object:", newImage); // Debug log
+            setUploadedImages((prev) => {
+              const updated = [newImage, ...prev];
+              console.log("Updated images array:", updated); // Debug log
+              return updated;
+            });
             showToast("⚡ Upload successful!", "success");
             resolve();
           } else {
+            console.error("Upload failed with status:", xhr.status, "Response:", xhr.responseText);
             showToast(xhr.responseText || "Upload failed", "error");
             reject(new Error(xhr.responseText || "Upload failed"));
           }
@@ -221,6 +225,7 @@ export default function Index() {
         xhr.onerror = () => {
           setUploadProgress(null);
           setUploading(false);
+          console.error("XHR error occurred during upload");
           showToast("Upload failed", "error");
           reject(new Error("Upload failed"));
         };
@@ -537,9 +542,9 @@ export default function Index() {
             </div>
           ) : (
             <div className="grid gap-4">
-              {uploadedImages.slice(0, 3).map((image, idx) => (
+              {uploadedImages.slice(0, 3).map((image) => (
                 <div
-                  key={idx}
+                  key={image.id}
                   className={`flex items-center gap-4 ${theme.card} p-3 transition-all duration-200 hover:shadow-md`}
                 >
                   <img
