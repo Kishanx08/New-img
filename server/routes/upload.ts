@@ -9,7 +9,7 @@ import {
   DeleteImageResponse,
 } from "@shared/api";
 import { WatermarkService } from "../utils/watermark";
-import { getSubdomainMode, getSubdomainSettings } from '../index';
+import { getSubdomainMode, getSubdomainSettings, canUseSubdomain } from '../index';
 
 // Simple uploads directory in project root
 const uploadsDir = "uploads";
@@ -333,7 +333,7 @@ export const handleUpload: RequestHandler = async (req, res) => {
   // Generate the correct URL based on subdomain mode and user
   let imageUrl: string;
   let username: string | null = null;
-  let userSubdomainEnabled = false;
+  let userId: string | null = null;
   if (apiKey) {
     const usersFile = path.join(uploadsDir, "users.json");
     if (fs.existsSync(usersFile)) {
@@ -342,22 +342,12 @@ export const handleUpload: RequestHandler = async (req, res) => {
         const user = users.find((u: any) => u.apiKey === apiKey);
         if (user) {
           username = user.username.toLowerCase();
-          // Check per-user subdomain setting if needed
-          const subdomainSettings = getSubdomainSettings();
-          userSubdomainEnabled = !!subdomainSettings[username];
+          userId = user.id;
         }
       } catch {}
     }
   }
-  const subdomainMode = getSubdomainMode();
-  if (
-    apiKey &&
-    username &&
-    (
-      subdomainMode === 'enabled' ||
-      (subdomainMode === 'per-user' && userSubdomainEnabled)
-    )
-  ) {
+  if (apiKey && username && userId && canUseSubdomain(userId)) {
     imageUrl = `https://${username}.x02.me/i/${finalFilename}`;
   } else {
     imageUrl = `https://x02.me/i/${finalFilename}`;
@@ -450,39 +440,50 @@ export const handleDeleteImage: RequestHandler = (req, res) => {
     // Check if file exists
     if (!fs.existsSync(filePath)) {
       console.log(`File not found at path: ${filePath}`);
-      const response: DeleteImageResponse = {
-        success: false,
-        error: `Image not found at ${filePath}`,
-      };
-      return res.status(404).json(response);
+      return res.status(404).send("File not found");
     }
 
     // Delete the file
     fs.unlinkSync(filePath);
-    console.log(`Successfully deleted: ${filePath}`);
-
-    const response: DeleteImageResponse = {
-      success: true,
-      message: "Image deleted successfully",
-    };
+    console.log(`File deleted: ${filePath}`);
 
     // After deleting, update analytics and usage-stats
-    // For simplicity, just decrement uploads and recalc totalSize
     const analytics = loadAnalytics();
     analytics.uploads = Math.max(0, (analytics.uploads || 1) - 1);
-    analytics.totalSize = Math.max(0, (analytics.totalSize || 0) - (fs.existsSync(filePath) ? fs.statSync(filePath).size : 0));
+    analytics.totalSize = Math.max(0, (analytics.totalSize || 0));
     saveAnalytics(analytics);
     // Optionally, update usage-stats as well (not decrementing arrays, just for demo)
+
+    // Generate the correct URL based on subdomain mode and user
+    let imageUrl: string;
+    let username: string | null = null;
+    let userId: string | null = null;
+    if (apiKey) {
+      const usersFile = path.join(uploadsDir, "users.json");
+      if (fs.existsSync(usersFile)) {
+        try {
+          const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
+          const user = users.find((u: any) => u.apiKey === apiKey);
+          if (user) {
+            username = user.username.toLowerCase();
+            userId = user.id;
+          }
+        } catch {}
+      }
+    }
+    if (apiKey && username && userId && canUseSubdomain(userId)) {
+      imageUrl = `https://${username}.x02.me/i/${filename}`;
+    } else {
+      imageUrl = `https://x02.me/i/${filename}`;
+    }
+
     res.json({
       success: true,
       message: "Image deleted successfully",
+      url: imageUrl
     });
   } catch (error) {
-    console.log("Delete error:", error);
-    const response: DeleteImageResponse = {
-      success: false,
-      error: "Failed to delete image",
-    };
-    res.status(500).json(response);
+    console.error('Error deleting image:', error);
+    res.status(500).send("Error deleting image");
   }
 };
