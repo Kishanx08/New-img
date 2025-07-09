@@ -110,6 +110,7 @@ export function createServer() {
 
   // Middleware to handle subdomain image serving
   app.use((req, res, next) => {
+    console.log('[Subdomain Middleware] Host:', req.headers.host, 'Path:', req.path);
     const host = req.headers.host || '';
     const subdomain = getSubdomain(host);
     if (subdomain) {
