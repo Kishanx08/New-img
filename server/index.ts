@@ -104,34 +104,31 @@ export function createServer() {
     const subdomain = getSubdomain(host);
     if (subdomain) {
       const mode = getSubdomainMode();
-      if (mode === 'disabled') {
-        // Block all subdomain image requests when disabled
-        return res.status(404).send('Subdomain image access is disabled');
-      }
-      if (mode === 'enabled') {
-        // Serve images from uploads/users/<subdomain>/
-        const imagePath = req.path.replace(/^\/i\//, '');
-        const userImagePath = path.join(process.cwd(), 'uploads', 'users', subdomain, imagePath);
-        console.log(`[Subdomain Serve] Checking for file: ${userImagePath}`);
-        if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
-          return res.sendFile(userImagePath);
-        } else {
-          return res.status(404).send('Image not found');
-        }
-      }
-      // per-user mode
       const settings = getSubdomainSettings();
-      if (settings[subdomain] === true) {
+      if (mode === 'enabled') {
+        // Allow all subdomain image requests
         const imagePath = req.path.replace(/^\/i\//, '');
         const userImagePath = path.join(process.cwd(), 'uploads', 'users', subdomain, imagePath);
-        console.log(`[Subdomain Serve] Checking for file: ${userImagePath}`);
+        console.log(`[Subdomain Serve] (enabled) Checking for file: ${userImagePath}`);
         if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
           return res.sendFile(userImagePath);
         } else {
           return res.status(404).send('Image not found');
         }
       } else {
-        return next();
+        // For 'disabled' or 'per-user', check per-user settings
+        if (settings[subdomain] === true) {
+          const imagePath = req.path.replace(/^\/i\//, '');
+          const userImagePath = path.join(process.cwd(), 'uploads', 'users', subdomain, imagePath);
+          console.log(`[Subdomain Serve] (per-user/disabled) Checking for file: ${userImagePath}`);
+          if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
+            return res.sendFile(userImagePath);
+          } else {
+            return res.status(404).send('Image not found');
+          }
+        } else {
+          return res.status(404).send('Subdomain image access is disabled');
+        }
       }
     }
     next();
