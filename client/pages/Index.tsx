@@ -81,6 +81,10 @@ export default function Index() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimeout = useRef<NodeJS.Timeout | null>(null);
   const [loadingUploads, setLoadingUploads] = useState(true);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<{
+    url: string;
+    originalName: string;
+  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -215,6 +219,7 @@ export default function Index() {
               return updated;
             });
             setLoadingUploads(false);
+            setUploadedImageUrl({ url, originalName: file.name });
             showToast("⚡ Upload successful!", "success");
             resolve();
           } else {
@@ -350,6 +355,37 @@ export default function Index() {
             style={{ minWidth: 260 }}
           >
             {toast.message}
+          </div>
+        </div>
+      )}
+      {uploadedImageUrl && (
+        <div className="fixed top-4 left-0 right-0 z-50 flex justify-center pointer-events-none">
+          <div className="flex items-center gap-4 bg-white border border-blue-200 shadow-lg rounded-xl px-6 py-4 pointer-events-auto max-w-lg w-full">
+            <img
+              src={uploadedImageUrl.url}
+              alt={uploadedImageUrl.originalName}
+              className="w-14 h-14 object-cover rounded border border-gray-200"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm text-gray-900 truncate">{uploadedImageUrl.originalName}</div>
+              <div className="text-xs text-blue-600 break-all truncate max-w-xs cursor-pointer" title={uploadedImageUrl.url} onClick={() => copyToClipboard(uploadedImageUrl.url)}>
+                {uploadedImageUrl.url}
+              </div>
+            </div>
+            <Button
+              size="sm"
+              className="bg-blue-500 hover:bg-blue-600 text-white rounded px-3 py-1"
+              onClick={() => copyToClipboard(uploadedImageUrl.url)}
+            >
+              Copy Link
+            </Button>
+            <button
+              className="ml-2 text-gray-400 hover:text-gray-700 text-xl font-bold focus:outline-none"
+              onClick={() => setUploadedImageUrl(null)}
+              aria-label="Close"
+            >
+              ×
+            </button>
           </div>
         </div>
       )}
