@@ -59,6 +59,19 @@ function getSubdomain(host: string) {
   return null;
 }
 
+// Helper to load users from users.json
+function loadUsers() {
+  const usersPath = path.join(process.cwd(), 'uploads', 'users.json');
+  if (!fs.existsSync(usersPath)) return [];
+  return JSON.parse(fs.readFileSync(usersPath, 'utf-8'));
+}
+
+// Helper to get user by username
+function getUserByUsername(username: string) {
+  const users = loadUsers();
+  return users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase());
+}
+
 export function getSubdomainSettings() {
   const configPath = path.join(process.cwd(), 'subdomain-settings.json');
   if (!fs.existsSync(configPath)) return {};
@@ -75,11 +88,11 @@ export function getSubdomainMode() {
 }
 
 // Helper to determine if a user can use subdomain features
-export function canUseSubdomain(username: string) {
+export function canUseSubdomain(userId: string) {
   const mode = getSubdomainMode();
   const settings = getSubdomainSettings();
   if (mode === 'enabled') return true;
-  if (mode === 'disabled') return settings[username] === true;
+  if (mode === 'disabled') return settings[userId] === true;
   return false;
 }
 
@@ -112,7 +125,8 @@ export function createServer() {
     const host = req.headers.host || '';
     const subdomain = getSubdomain(host);
     if (subdomain) {
-      if (canUseSubdomain(subdomain)) {
+      const user = getUserByUsername(subdomain);
+      if (user && canUseSubdomain(user.id)) {
         const imagePath = req.path.replace(/^\/i\//, '');
         const userImagePath = path.join(process.cwd(), 'uploads', 'users', subdomain, imagePath);
         console.log(`[Subdomain Serve] (allowed) Checking for file: ${userImagePath}`);
