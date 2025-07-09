@@ -59,26 +59,13 @@ function getSubdomain(host: string) {
   return null;
 }
 
-// Helper to read subdomain-settings.json
-function getSubdomainSettings() {
+export function getSubdomainSettings() {
   const configPath = path.join(__dirname, '../subdomain-settings.json');
   if (!fs.existsSync(configPath)) return {};
   return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
 }
 
-// Helper to update subdomain-settings.json
-function setSubdomainSetting(username: string, enabled: boolean) {
-  const configPath = path.join(__dirname, '../subdomain-settings.json');
-  let settings = {};
-  if (fs.existsSync(configPath)) {
-    settings = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-  }
-  settings[username] = enabled;
-  fs.writeFileSync(configPath, JSON.stringify(settings, null, 2));
-}
-
-// Helper to read subdomain-mode.json
-function getSubdomainMode() {
+export function getSubdomainMode() {
   const modePath = path.join(__dirname, '../subdomain-mode.json');
   if (!fs.existsSync(modePath)) return 'enabled';
   const data = JSON.parse(fs.readFileSync(modePath, 'utf-8'));

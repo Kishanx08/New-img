@@ -9,6 +9,7 @@ import {
   DeleteImageResponse,
 } from "@shared/api";
 import { WatermarkService } from "../utils/watermark";
+import { getSubdomainMode, getSubdomainSettings } from '../index';
 
 // Simple uploads directory in project root
 const uploadsDir = "uploads";
@@ -329,26 +330,35 @@ export const handleUpload: RequestHandler = async (req, res) => {
     }
   }
 
-  // Generate the correct URL based on whether user has API key
+  // Generate the correct URL based on subdomain mode and user
   let imageUrl: string;
+  let username: string | null = null;
+  let userSubdomainEnabled = false;
   if (apiKey) {
-    // Check if file was uploaded to user-specific folder
     const usersFile = path.join(uploadsDir, "users.json");
     if (fs.existsSync(usersFile)) {
       try {
         const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
         const user = users.find((u: any) => u.apiKey === apiKey);
         if (user) {
-          imageUrl = `https://${user.username.toLowerCase()}.x02.me/i/${finalFilename}`;
-        } else {
-          imageUrl = `https://x02.me/i/${finalFilename}`;
+          username = user.username.toLowerCase();
+          // Check per-user subdomain setting if needed
+          const subdomainSettings = getSubdomainSettings();
+          userSubdomainEnabled = !!subdomainSettings[username];
         }
-      } catch (error) {
-        imageUrl = `https://x02.me/i/${finalFilename}`;
-      }
-    } else {
-      imageUrl = `https://x02.me/i/${finalFilename}`;
+      } catch {}
     }
+  }
+  const subdomainMode = getSubdomainMode();
+  if (
+    apiKey &&
+    username &&
+    (
+      subdomainMode === 'enabled' ||
+      (subdomainMode === 'per-user' && userSubdomainEnabled)
+    )
+  ) {
+    imageUrl = `https://${username}.x02.me/i/${finalFilename}`;
   } else {
     imageUrl = `https://x02.me/i/${finalFilename}`;
   }
@@ -357,18 +367,18 @@ export const handleUpload: RequestHandler = async (req, res) => {
   updateAnalytics(!!apiKey, req.file.size);
   // Enhanced analytics for charts
   const fileType = path.extname(req.file.filename).replace('.', '').toLowerCase();
-  let username = 'anonymous';
+  let usernameForAnalytics = 'anonymous';
   if (apiKey) {
     const usersFile = path.join(uploadsDir, "users.json");
     if (fs.existsSync(usersFile)) {
       try {
         const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
         const user = users.find((u: any) => u.apiKey === apiKey);
-        if (user) username = user.username;
+        if (user) usernameForAnalytics = user.username;
       } catch {}
     }
   }
-  updateAnalyticsFull({ username, fileType, fileSize: req.file.size });
+  updateAnalyticsFull({ username: usernameForAnalytics, fileType, fileSize: req.file.size });
   // Usage stats (mock some data for demo)
   updateUsageStats({
     uploadSpeed: { date: new Date().toISOString().slice(0, 10), speed: Math.random() * 10 + 1 },
