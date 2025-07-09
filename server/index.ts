@@ -60,13 +60,13 @@ function getSubdomain(host: string) {
 }
 
 export function getSubdomainSettings() {
-  const configPath = path.join(__dirname, '../subdomain-settings.json');
+  const configPath = path.join(process.cwd(), 'subdomain-settings.json');
   if (!fs.existsSync(configPath)) return {};
   return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
 }
 
 export function getSubdomainMode() {
-  const modePath = path.join(__dirname, '../subdomain-mode.json');
+  const modePath = path.join(process.cwd(), 'subdomain-mode.json');
   console.log('[getSubdomainMode] Reading from:', modePath);
   if (!fs.existsSync(modePath)) return 'enabled';
   const data = JSON.parse(fs.readFileSync(modePath, 'utf-8'));
