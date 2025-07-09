@@ -138,11 +138,17 @@ export function createServer() {
   // Custom fallback handler for /i/:filename when subdomains are disabled
   app.get('/i/:filename', async (req, res, next) => {
     const mode = getSubdomainMode();
-    if (mode !== 'disabled') return next();
     const filename = req.params.filename;
+    console.log(`[Fallback Handler] Called for /i/${filename}, mode: ${mode}`);
+    if (mode !== 'disabled') {
+      console.log('[Fallback Handler] Mode is not disabled, calling next()');
+      return next();
+    }
     const rootPath = path.join(process.cwd(), 'uploads', filename);
+    console.log(`[Fallback Handler] Checking root path: ${rootPath}`);
     // 1. Check root uploads directory
     if (fs.existsSync(rootPath) && fs.statSync(rootPath).isFile()) {
+      console.log(`[Fallback Handler] Found in root uploads: ${rootPath}`);
       return res.sendFile(rootPath);
     }
     // 2. Search user folders
@@ -151,12 +157,17 @@ export function createServer() {
       const users = fs.readdirSync(usersDir);
       for (const user of users) {
         const userFile = path.join(usersDir, user, filename);
+        console.log(`[Fallback Handler] Checking user folder: ${userFile}`);
         if (fs.existsSync(userFile) && fs.statSync(userFile).isFile()) {
+          console.log(`[Fallback Handler] Found in user folder: ${userFile}`);
           return res.sendFile(userFile);
         }
       }
+    } else {
+      console.log('[Fallback Handler] Users directory does not exist:', usersDir);
     }
     // 3. Not found
+    console.log(`[Fallback Handler] Not found: ${filename}`);
     return res.status(404).send('Image not found');
   });
 
