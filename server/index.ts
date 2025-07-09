@@ -171,7 +171,6 @@ export function createServer() {
 
   // Subdomain-based image serving routes
   // These routes will handle requests like kapoor.x02.me/i/photo.png
-  app.get("/i/:filename", handleSubdomainImages);
   app.get("/i", listSubdomainImages);
 
   // Authentication endpoints
