@@ -10,6 +10,9 @@ const OTP_EXPIRY_MINUTES = 5;
 // Store OTPs temporarily (in production, use Redis)
 const otpStore = new Map<string, { otp: string; expires: number; used: boolean }>();
 
+// Persistent admin session store (in-memory; use Redis/db for production)
+const adminSessions = new Map<string, { expires: number }>();
+
 // Discord bot client
 const discordClient = new Client({
   intents: [
@@ -192,13 +195,20 @@ export const verifyAdminOTP: RequestHandler = async (req, res) => {
     const adminToken = crypto.randomBytes(32).toString('hex');
     const adminSessionExpires = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
 
-    // Store admin session (in production, use Redis)
-    const adminSessions = new Map<string, { expires: number }>();
+    // Store admin session (in production, use Redis/database)
     adminSessions.set(adminToken, { expires: adminSessionExpires });
+
+    // Set adminToken as httpOnly cookie
+    res.cookie('adminToken', adminToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 24 * 60 * 60 * 1000
+    });
 
     res.json({
       success: true,
-      adminToken,
       message: "Admin access granted"
     });
 
@@ -223,8 +233,11 @@ function cleanupExpiredOTPs() {
 
 // Middleware to check admin session
 export const requireAdminSession = (req: any, res: any, next: any) => {
-  const adminToken = req.headers['x-admin-token'] || req.body.adminToken;
-  
+  // Check for adminToken in cookies first
+  const adminToken = req.cookies?.adminToken
+    || req.headers['x-admin-token']
+    || req.body.adminToken;
+
   if (!adminToken) {
     return res.status(401).json({
       success: false,
@@ -232,10 +245,6 @@ export const requireAdminSession = (req: any, res: any, next: any) => {
     });
   }
 
-  // In production, check against Redis/database
-  // For now, we'll use a simple check
-  const adminSessions = new Map(); // This should be persistent
-  
   if (!adminSessions.has(adminToken)) {
     return res.status(401).json({
       success: false,

@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import fs from 'fs';
 import subdomainSettingsRouter from './routes/subdomain-settings';
+import cookieParser from 'cookie-parser';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -78,6 +79,9 @@ function setSubdomainSetting(username: string, enabled: boolean) {
 
 export function createServer() {
   const app = express();
+
+  // Add cookie-parser middleware
+  app.use(cookieParser());
 
   // Server startup message
   console.log("🚀 Starting X02 Image Upload Server...");
