@@ -2,6 +2,10 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import { requireAdminSession } from './admin-auth';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 const SETTINGS_PATH = path.join(__dirname, '../../subdomain-settings.json');
