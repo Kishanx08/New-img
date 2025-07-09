@@ -74,6 +74,17 @@ export function getSubdomainMode() {
   return data.mode || 'enabled';
 }
 
+// Helper to determine if a user can use subdomain features
+export function canUseSubdomain(username: string) {
+  const mode = getSubdomainMode();
+  const settings = getSubdomainSettings();
+  if (mode === 'enabled') return true;
+  if (mode === 'disabled') return settings[username] === true;
+  // If you want 'per-user' to behave the same as 'disabled', use the same logic
+  if (mode === 'per-user') return settings[username] === true;
+  return false;
+}
+
 export function createServer() {
   const app = express();
 
@@ -103,32 +114,17 @@ export function createServer() {
     const host = req.headers.host || '';
     const subdomain = getSubdomain(host);
     if (subdomain) {
-      const mode = getSubdomainMode();
-      const settings = getSubdomainSettings();
-      if (mode === 'enabled') {
-        // Allow all subdomain image requests
+      if (canUseSubdomain(subdomain)) {
         const imagePath = req.path.replace(/^\/i\//, '');
         const userImagePath = path.join(process.cwd(), 'uploads', 'users', subdomain, imagePath);
-        console.log(`[Subdomain Serve] (enabled) Checking for file: ${userImagePath}`);
+        console.log(`[Subdomain Serve] (allowed) Checking for file: ${userImagePath}`);
         if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
           return res.sendFile(userImagePath);
         } else {
           return res.status(404).send('Image not found');
         }
       } else {
-        // For 'disabled' or 'per-user', check per-user settings
-        if (settings[subdomain] === true) {
-          const imagePath = req.path.replace(/^\/i\//, '');
-          const userImagePath = path.join(process.cwd(), 'uploads', 'users', subdomain, imagePath);
-          console.log(`[Subdomain Serve] (per-user/disabled) Checking for file: ${userImagePath}`);
-          if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
-            return res.sendFile(userImagePath);
-          } else {
-            return res.status(404).send('Image not found');
-          }
-        } else {
-          return res.status(404).send('Subdomain image access is disabled');
-        }
+        return res.status(404).send('Subdomain image access is disabled');
       }
     }
     next();
