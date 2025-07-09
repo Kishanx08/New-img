@@ -584,6 +584,26 @@ export default function Admin() {
     return () => clearInterval(interval);
   }, [otpExpiry, toast]);
 
+  // Make System Health live
+  useEffect(() => {
+    const fetchSystemHealth = async () => {
+      try {
+        const res = await fetch('/api/admin/performance');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.performance) {
+            setSystemHealth(data.performance);
+          }
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+    fetchSystemHealth();
+    const interval = setInterval(fetchSystemHealth, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Admin Authentication Screen
   if (!isAuthenticated) {
     return (
