@@ -67,8 +67,10 @@ export function getSubdomainSettings() {
 
 export function getSubdomainMode() {
   const modePath = path.join(__dirname, '../subdomain-mode.json');
+  console.log('[getSubdomainMode] Reading from:', modePath);
   if (!fs.existsSync(modePath)) return 'enabled';
   const data = JSON.parse(fs.readFileSync(modePath, 'utf-8'));
+  console.log('[getSubdomainMode] File content:', data);
   return data.mode || 'enabled';
 }
 
@@ -168,7 +170,10 @@ export function createServer() {
     }
     // 3. Not found
     console.log(`[Fallback Handler] Not found: ${filename}`);
-    return res.status(404).send('Image not found');
+    return res.status(404).json({ 
+      error: 'Image not found',
+      message: `The requested image "${filename}" could not be found in any available locations. Checked: root uploads directory and all user folders.`
+    });
   });
 
   // Serve uploaded images statically
@@ -181,7 +186,6 @@ export function createServer() {
   });
 
   // Subdomain-based image serving routes
-  // These routes will handle requests like kapoor.x02.me/i/photo.png
   app.get("/i", listSubdomainImages);
 
   // Authentication endpoints
@@ -260,6 +264,7 @@ export function createServer() {
 
   return app;
 }
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const app = createServer();
   const PORT = process.env.PORT || 8080;
