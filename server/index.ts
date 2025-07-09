@@ -126,6 +126,7 @@ export function createServer() {
         const imagePath = req.path.replace(/^\/i\//, '');
         const userImagePath = path.join(__dirname, '../uploads/users', subdomain, imagePath);
         if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
+          console.log(`[Subdomain Serve] Looking for file: ${userImagePath}`);
           return res.sendFile(userImagePath);
         } else {
           return res.status(404).send('Image not found');
@@ -137,6 +138,7 @@ export function createServer() {
         const imagePath = req.path.replace(/^\/i\//, '');
         const userImagePath = path.join(__dirname, '../uploads/users', subdomain, imagePath);
         if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
+          console.log(`[Subdomain Serve] Looking for file: ${userImagePath}`);
           return res.sendFile(userImagePath);
         } else {
           return res.status(404).send('Image not found');
