@@ -803,10 +803,10 @@ function DashboardContent() {
             {!data?.uploads?.length ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Upload className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No uploads yet</p>
+                <p className="text-gray-400">No uploads yet</p>
                 <Button
                   variant="outline"
-                  className="mt-4"
+                  className="mt-4 bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-medium rounded px-4 py-2 shadow"
                   onClick={() => navigate("/")}
                 >
                   Start Uploading
