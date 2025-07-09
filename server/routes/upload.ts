@@ -38,6 +38,63 @@ function updateAnalytics(apiKeyUsed: boolean, fileSize: number) {
   saveAnalytics(analytics);
 }
 
+const USAGE_STATS_FILE = path.join(uploadsDir, "usage-stats.json");
+
+function loadUsageStats() {
+  if (!fs.existsSync(USAGE_STATS_FILE))
+    return {
+      uploadSpeed: [],
+      watermarkProcessing: [],
+      errorRates: [],
+      apiResponseTimes: [],
+      bandwidthUsage: []
+    };
+  return JSON.parse(fs.readFileSync(USAGE_STATS_FILE, "utf-8"));
+}
+
+function saveUsageStats(stats) {
+  fs.writeFileSync(USAGE_STATS_FILE, JSON.stringify(stats, null, 2));
+}
+
+function updateUsageStats({ uploadSpeed, watermarkProcessing, errorRates, apiResponseTimes, bandwidthUsage }) {
+  const stats = loadUsageStats();
+  if (uploadSpeed) stats.uploadSpeed.push(uploadSpeed);
+  if (watermarkProcessing) stats.watermarkProcessing.push(watermarkProcessing);
+  if (errorRates) stats.errorRates.push(errorRates);
+  if (apiResponseTimes) stats.apiResponseTimes.push(apiResponseTimes);
+  if (bandwidthUsage) stats.bandwidthUsage.push(bandwidthUsage);
+  saveUsageStats(stats);
+}
+
+function updateAnalyticsFull({ username, fileType, fileSize }) {
+  const analytics = loadAnalytics();
+  // Total uploads
+  analytics.uploads = (analytics.uploads || 0) + 1;
+  // File type distribution
+  analytics.fileTypeDistribution = analytics.fileTypeDistribution || [];
+  let typeEntry = analytics.fileTypeDistribution.find(f => f.type === fileType);
+  if (typeEntry) typeEntry.count += 1;
+  else analytics.fileTypeDistribution.push({ type: fileType, count: 1 });
+  // User activity
+  analytics.userActivity = analytics.userActivity || [];
+  let userEntry = analytics.userActivity.find(u => u.username === username);
+  if (userEntry) userEntry.count += 1;
+  else analytics.userActivity.push({ username, count: 1 });
+  // Upload volume
+  analytics.uploadVolume = analytics.uploadVolume || [];
+  const today = new Date().toISOString().slice(0, 10);
+  let volumeEntry = analytics.uploadVolume.find(v => v.date === today);
+  if (volumeEntry) volumeEntry.count += 1;
+  else analytics.uploadVolume.push({ date: today, count: 1 });
+  // Storage trends
+  analytics.totalSize = (analytics.totalSize || 0) + fileSize;
+  analytics.storageTrends = analytics.storageTrends || [];
+  let storageEntry = analytics.storageTrends.find(s => s.date === today);
+  if (storageEntry) storageEntry.size = analytics.totalSize;
+  else analytics.storageTrends.push({ date: today, size: analytics.totalSize });
+  saveAnalytics(analytics);
+}
+
 // Helper function to sanitize filename
 const sanitizeFilename = (filename: string) => {
   // Remove dangerous characters and spaces
@@ -298,6 +355,28 @@ export const handleUpload: RequestHandler = async (req, res) => {
 
   // Track the upload with API key usage
   updateAnalytics(!!apiKey, req.file.size);
+  // Enhanced analytics for charts
+  const fileType = path.extname(req.file.filename).replace('.', '').toLowerCase();
+  let username = 'anonymous';
+  if (apiKey) {
+    const usersFile = path.join(uploadsDir, "users.json");
+    if (fs.existsSync(usersFile)) {
+      try {
+        const users = JSON.parse(fs.readFileSync(usersFile, "utf-8"));
+        const user = users.find((u: any) => u.apiKey === apiKey);
+        if (user) username = user.username;
+      } catch {}
+    }
+  }
+  updateAnalyticsFull({ username, fileType, fileSize: req.file.size });
+  // Usage stats (mock some data for demo)
+  updateUsageStats({
+    uploadSpeed: { date: new Date().toISOString().slice(0, 10), speed: Math.random() * 10 + 1 },
+    watermarkProcessing: { date: new Date().toISOString().slice(0, 10), ms: Math.floor(Math.random() * 100 + 50) },
+    errorRates: { date: new Date().toISOString().slice(0, 10), rate: Math.random() * 0.1 },
+    apiResponseTimes: { date: new Date().toISOString().slice(0, 10), ms: Math.floor(Math.random() * 200 + 50) },
+    bandwidthUsage: { date: new Date().toISOString().slice(0, 10), mb: req.file.size / (1024 * 1024) }
+  });
 
   // Update user usage if user is authenticated
   if (apiKey) {
@@ -377,7 +456,17 @@ export const handleDeleteImage: RequestHandler = (req, res) => {
       message: "Image deleted successfully",
     };
 
-    res.json(response);
+    // After deleting, update analytics and usage-stats
+    // For simplicity, just decrement uploads and recalc totalSize
+    const analytics = loadAnalytics();
+    analytics.uploads = Math.max(0, (analytics.uploads || 1) - 1);
+    analytics.totalSize = Math.max(0, (analytics.totalSize || 0) - (fs.existsSync(filePath) ? fs.statSync(filePath).size : 0));
+    saveAnalytics(analytics);
+    // Optionally, update usage-stats as well (not decrementing arrays, just for demo)
+    res.json({
+      success: true,
+      message: "Image deleted successfully",
+    });
   } catch (error) {
     console.log("Delete error:", error);
     const response: DeleteImageResponse = {
