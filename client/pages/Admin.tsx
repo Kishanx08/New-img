@@ -130,6 +130,7 @@ export default function Admin() {
   const [subdomainError, setSubdomainError] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const { toast } = useToast();
+  const [activityFeed, setActivityFeed] = useState<any[]>([]);
 
   // Fetch real user data for Users tab
   useEffect(() => {
@@ -604,6 +605,26 @@ export default function Admin() {
     return () => clearInterval(interval);
   }, []);
 
+  // Make Activity Feed live
+  useEffect(() => {
+    const fetchActivityFeed = async () => {
+      try {
+        const res = await fetch('/api/admin/overview');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.overview && data.overview.activityFeed) {
+            setActivityFeed(data.overview.activityFeed);
+          }
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+    fetchActivityFeed();
+    const interval = setInterval(fetchActivityFeed, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Admin Authentication Screen
   if (!isAuthenticated) {
     return (
@@ -840,24 +861,12 @@ export default function Admin() {
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4 max-h-96 overflow-y-auto">
-                          {overview?.activityFeed.map((activity: any) => (
-                            <div key={activity.id} className="flex items-start space-x-3 p-3 border border-[#222] rounded-lg bg-[#181A1B]">
-                              <div className={`w-2 h-2 rounded-full mt-2 ${getSeverityColor(activity.severity)}`} />
-                              <div className="flex-1">
-                                <div className="flex items-center space-x-2">
-                                  {getActivityIcon(activity.type)}
-                                  <span className="font-medium text-[#white]">{activity.message}</span>
-                                  <Badge variant="outline" className="text-xs border-[#white] text-[#00E6E6] bg-transparent">
-                                    {activity.type}
-                                  </Badge>
-                                </div>
-                                <div className="flex items-center space-x-4 mt-1 text-sm text-gray-400">
-                                  <span>{formatTime(activity.timestamp)}</span>
-                                  {activity.user && (
-                                    <span>User: <span className="text-[#00E6E6]">{activity.user}</span></span>
-                                  )}
-                                </div>
-                              </div>
+                          {activityFeed.map(item => (
+                            <div key={item.id} className="flex items-center gap-2 mb-2">
+                              <span className={`inline-block w-2 h-2 rounded-full mr-2 ${item.severity === 'error' ? 'bg-red-500' : item.severity === 'warning' ? 'bg-yellow-400' : item.severity === 'success' ? 'bg-green-500' : 'bg-blue-500'}`}></span>
+                              <span className="font-medium">{item.type}</span>
+                              <span className="text-xs text-gray-500">{item.timestamp}</span>
+                              <span className="ml-2">{item.message}</span>
                             </div>
                           ))}
                         </div>
