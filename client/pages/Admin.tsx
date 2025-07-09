@@ -443,6 +443,25 @@ export default function Admin() {
     setApiLoading(false);
   };
 
+  const handleDeleteUser = async (user: User) => {
+    if (!window.confirm(`Are you sure you want to delete user '${user.username}'? This will remove all their data permanently.`)) return;
+    setApiLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        toast({ title: 'User deleted successfully' });
+        // Refresh users
+        setTab('users');
+      } else {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' });
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to delete user', variant: 'destructive' });
+    }
+    setApiLoading(false);
+  };
+
   // Request OTP from Discord
   const requestOTP = async () => {
     setIsRequestingOTP(true);
@@ -1058,6 +1077,7 @@ export default function Admin() {
                               <Button onClick={() => handleEditUser(user)} size="sm" variant="outline" className="border-[#00E6E6] text-[#00E6E6] mr-2">Edit</Button>
                               <Button onClick={() => handleSuspendUser(user)} size="sm" variant="outline" className="border-red-400 text-red-400 mr-2" disabled={apiLoading}>Suspend/Activate</Button>
                               <Button onClick={() => handleResetApi(user)} size="sm" variant="outline" className="border-yellow-400 text-yellow-400" disabled={apiLoading}>Reset API</Button>
+                              <Button variant="destructive" onClick={() => handleDeleteUser(user)} disabled={apiLoading}>Delete</Button>
                             </TableCell>
                           </TableRow>
                         ))}

@@ -293,6 +293,41 @@ adminRouter.post('/users/:id/reset-api', (req, res) => {
   }
 });
 
+adminRouter.delete('/users/:id', (req, res) => {
+  try {
+    const userId = req.params.id;
+    let users = loadUsers();
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    const user = users[userIndex];
+    // Remove user from users.json
+    users.splice(userIndex, 1);
+    saveUsers(users);
+    // Delete user's uploads folder
+    if (user.uploadsFolder && fs.existsSync(user.uploadsFolder)) {
+      fs.rmSync(user.uploadsFolder, { recursive: true, force: true });
+    }
+    // Optionally, clean up subdomain-settings.json
+    const subdomainSettingsPath = path.join(process.cwd(), 'subdomain-settings.json');
+    if (fs.existsSync(subdomainSettingsPath)) {
+      try {
+        const subdomainSettings = JSON.parse(fs.readFileSync(subdomainSettingsPath, 'utf-8'));
+        if (subdomainSettings[user.id]) {
+          delete subdomainSettings[user.id];
+          fs.writeFileSync(subdomainSettingsPath, JSON.stringify(subdomainSettings, null, 2));
+        }
+      } catch {}
+    }
+    // Optionally, clean up analytics, etc. (not implemented here)
+    res.json({ success: true, message: 'User deleted successfully' });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({ success: false, error: 'Failed to delete user' });
+  }
+});
+
 adminRouter.get('/insights', (_req, res) => {
   try {
     const users = loadUsers();
