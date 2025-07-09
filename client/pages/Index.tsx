@@ -86,6 +86,7 @@ export default function Index() {
     originalName: string;
   } | null>(null);
   const [subdomainMode, setSubdomainMode] = useState('enabled');
+  const [uploadSuccess, setUploadSuccess] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -227,6 +228,7 @@ export default function Index() {
             });
             setLoadingUploads(false);
             setUploadedImageUrl({ url, originalName: file.name });
+            setUploadSuccess(true);
             showToast("⚡ Upload successful!", "success");
             resolve();
           } else {
@@ -405,6 +407,11 @@ export default function Index() {
             </div>
           );
         })()
+      )}
+      {uploadSuccess && (
+        <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
+          <div className="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-center font-medium shadow">Upload successful!</div>
+        </div>
       )}
       <header
         className={`w-full border-b ${theme.card} py-4 mb-8 relative z-10`}
@@ -613,30 +620,26 @@ export default function Index() {
                       className="w-16 h-16 object-cover rounded border border-gray-200"
                     />
                     <div className="flex-1">
-                      <div className="font-medium" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>{image.originalName}</div>
-                      <div className="text-blue-600 text-xs">
-                        {formatFileSize(image.size)} •{" "}
-                        {new Date(image.uploadedAt).toLocaleDateString()}
-                      </div>
-                      <div className="text-blue-500 text-xs break-all">
-                        {displayUrl}
-                      </div>
+                      <div className="font-medium truncate" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>{image.originalName}</div>
+                      <div className="text-blue-600 text-xs break-all truncate max-w-xs whitespace-nowrap">{displayUrl}</div>
                     </div>
-                    <Button
-                      size="sm"
-                      className={`${theme.button} mr-2 rounded-xl shadow-md hover:shadow-lg transition-all backdrop-blur-md bg-white/80 dark:bg-black/60 border-none`}
-                      onClick={() => copyToClipboard(displayUrl)}
-                    >
-                      Copy Link
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={`${theme.buttonOutline} mr-2 rounded-xl shadow-md hover:shadow-lg transition-all backdrop-blur-md bg-white/70 dark:bg-black/60 border-none`}
-                      onClick={() => window.open(displayUrl, "_blank")}
-                    >
-                      Open
-                    </Button>
+                    <div className="flex gap-2 flex-shrink-0 items-center">
+                      <Button
+                        size="sm"
+                        className={`${theme.button} rounded-xl shadow-md hover:shadow-lg transition-all backdrop-blur-md bg-white/80 dark:bg-black/60 border-none`}
+                        onClick={() => copyToClipboard(displayUrl)}
+                      >
+                        Copy Link
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={`${theme.buttonOutline} rounded-xl shadow-md hover:shadow-lg transition-all backdrop-blur-md bg-white/70 dark:bg-black/60 border-none`}
+                        onClick={() => window.open(displayUrl, "_blank")}
+                      >
+                        Open
+                      </Button>
+                    </div>
                   </div>
                 );
               })}
