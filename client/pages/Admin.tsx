@@ -238,6 +238,35 @@ export default function Admin() {
     fetchSubdomainSettings();
   }, []);
 
+  // Fetch users when settings modal is opened
+  useEffect(() => {
+    if (!settingsOpen) return;
+    if (users.length > 0) return; // Don't refetch if already loaded
+    setUsersLoading(true);
+    setUsersError(null);
+    fetch('/api/admin/users')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setUsers(data.users);
+        } else {
+          setUsersError(data.error || 'Failed to load users');
+        }
+      })
+      .catch(err => setUsersError(err.message))
+      .finally(() => setUsersLoading(false));
+  }, [settingsOpen]);
+
+  // Fetch global subdomain mode when settings modal opens
+  useEffect(() => {
+    if (!settingsOpen) return;
+    fetch('/api/admin/subdomain-settings/mode', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.mode) setSubdomainMode(data.mode);
+      });
+  }, [settingsOpen]);
+
   const handleSubdomainToggle = async (username: string, enabled: boolean) => {
     setSubdomainLoading(true);
     setSubdomainError(null);
@@ -650,6 +679,23 @@ export default function Admin() {
       </div>
     );
   }
+
+  // Save handler for settings modal
+  const handleSettingsSave = async () => {
+    // Save global subdomain mode
+    try {
+      await fetch('/api/admin/subdomain-settings/mode', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ mode: subdomainMode })
+      });
+      toast({ title: 'Settings saved', description: 'Your changes have been saved.' });
+      setSettingsOpen(false);
+    } catch (err) {
+      toast({ title: 'Error', description: 'Failed to save settings', variant: 'destructive' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0e101e] text-gray-200 flex">
@@ -1381,7 +1427,7 @@ export default function Admin() {
           </div>
           <DialogFooter>
             <Button onClick={() => setSettingsOpen(false)}>Close</Button>
-            <Button className="bg-[#00E6E6] text-black hover:bg-[#00E6E6]/80">Save</Button>
+            <Button className="bg-[#00E6E6] text-black hover:bg-[#00E6E6]/80" onClick={handleSettingsSave}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

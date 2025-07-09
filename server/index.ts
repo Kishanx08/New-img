@@ -77,6 +77,14 @@ function setSubdomainSetting(username: string, enabled: boolean) {
   fs.writeFileSync(configPath, JSON.stringify(settings, null, 2));
 }
 
+// Helper to read subdomain-mode.json
+function getSubdomainMode() {
+  const modePath = path.join(__dirname, '../subdomain-mode.json');
+  if (!fs.existsSync(modePath)) return 'enabled';
+  const data = JSON.parse(fs.readFileSync(modePath, 'utf-8'));
+  return data.mode || 'enabled';
+}
+
 export function createServer() {
   const app = express();
 
@@ -111,8 +119,9 @@ export function createServer() {
     const host = req.headers.host || '';
     const subdomain = getSubdomain(host);
     if (subdomain) {
-      const settings = getSubdomainSettings();
-      if (settings[subdomain] === true) {
+      const mode = getSubdomainMode();
+      if (mode === 'disabled') return next();
+      if (mode === 'enabled') {
         // Serve images from uploads/users/<subdomain>/
         const imagePath = req.path.replace(/^\//, '');
         const userImagePath = path.join(__dirname, '../uploads/users', subdomain, imagePath);
@@ -121,8 +130,18 @@ export function createServer() {
         } else {
           return res.status(404).send('Image not found');
         }
+      }
+      // per-user mode
+      const settings = getSubdomainSettings();
+      if (settings[subdomain] === true) {
+        const imagePath = req.path.replace(/^\//, '');
+        const userImagePath = path.join(__dirname, '../uploads/users', subdomain, imagePath);
+        if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
+          return res.sendFile(userImagePath);
+        } else {
+          return res.status(404).send('Image not found');
+        }
       } else {
-        // Instead of returning 403, fall through to default/static handler
         return next();
       }
     }
