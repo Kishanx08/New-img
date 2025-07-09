@@ -123,7 +123,7 @@ export function createServer() {
       if (mode === 'disabled') return next();
       if (mode === 'enabled') {
         // Serve images from uploads/users/<subdomain>/
-        const imagePath = req.path.replace(/^\//, '');
+        const imagePath = req.path.replace(/^\/i\//, '');
         const userImagePath = path.join(__dirname, '../uploads/users', subdomain, imagePath);
         if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
           return res.sendFile(userImagePath);
@@ -134,7 +134,7 @@ export function createServer() {
       // per-user mode
       const settings = getSubdomainSettings();
       if (settings[subdomain] === true) {
-        const imagePath = req.path.replace(/^\//, '');
+        const imagePath = req.path.replace(/^\/i\//, '');
         const userImagePath = path.join(__dirname, '../uploads/users', subdomain, imagePath);
         if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
           return res.sendFile(userImagePath);
