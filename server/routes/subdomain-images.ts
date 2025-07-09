@@ -7,6 +7,7 @@ import {
   getActualUserFolder,
   sanitizeFilename,
 } from "../utils/getSubdomain";
+import { getSubdomainMode } from '../index';
 
 /**
  * Handles subdomain-based image serving
@@ -16,7 +17,7 @@ import {
  * - https://kapoor.x02.me/i/photo.png
  * - https://kishan.x02.me/i/screenshot.jpg
  */
-export const handleSubdomainImages: RequestHandler = (req, res) => {
+export const handleSubdomainImages: RequestHandler = (req, res, next) => {
   try {
     // Extract subdomain from hostname
     const hostname = req.hostname || req.get("host") || "";
@@ -26,8 +27,14 @@ export const handleSubdomainImages: RequestHandler = (req, res) => {
       `[Subdomain Images] Request from ${hostname}, extracted subdomain: ${subdomain}`,
     );
 
-    // Check if we have a valid subdomain
+    // Check subdomain mode
+    const mode = getSubdomainMode();
     if (!subdomain) {
+      if (mode === 'disabled') {
+        // Allow fallback to static serving
+        return next();
+      }
+      // Otherwise, enforce subdomain logic
       console.log(
         `[Subdomain Images] No valid subdomain found for hostname: ${hostname}`,
       );
