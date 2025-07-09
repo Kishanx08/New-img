@@ -126,6 +126,8 @@ export default function Admin() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [subdomainMode, setSubdomainMode] = useState<'disabled' | 'enabled' | 'per-user'>('enabled');
   const [subdomainUserOverrides, setSubdomainUserOverrides] = useState<{[id: string]: boolean}>({});
+  const [subdomainLoading, setSubdomainLoading] = useState(false);
+  const [subdomainError, setSubdomainError] = useState<string | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const { toast } = useToast();
 
@@ -216,6 +218,44 @@ export default function Admin() {
       .catch(err => setOverviewError(err.message))
       .finally(() => setOverviewLoading(false));
   }, [tab]);
+
+  useEffect(() => {
+    // Fetch subdomain settings on mount
+    const fetchSubdomainSettings = async () => {
+      setSubdomainLoading(true);
+      setSubdomainError(null);
+      try {
+        const res = await fetch('/api/admin/subdomain-settings', { credentials: 'include' });
+        if (!res.ok) throw new Error('Failed to fetch subdomain settings');
+        const data = await res.json();
+        setSubdomainUserOverrides(data);
+      } catch (err: any) {
+        setSubdomainError(err.message || 'Unknown error');
+      } finally {
+        setSubdomainLoading(false);
+      }
+    };
+    fetchSubdomainSettings();
+  }, []);
+
+  const handleSubdomainToggle = async (username: string, enabled: boolean) => {
+    setSubdomainLoading(true);
+    setSubdomainError(null);
+    try {
+      const res = await fetch('/api/admin/subdomain-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, enabled })
+      });
+      if (!res.ok) throw new Error('Failed to update subdomain setting');
+      setSubdomainUserOverrides(o => ({ ...o, [username]: enabled }));
+    } catch (err: any) {
+      setSubdomainError(err.message || 'Unknown error');
+    } finally {
+      setSubdomainLoading(false);
+    }
+  };
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -1327,9 +1367,11 @@ export default function Admin() {
                   {users.filter(u => u.username.toLowerCase().includes(userSearch.toLowerCase())).map(user => (
                     <div key={user.id} className="flex items-center justify-between p-2 rounded bg-[#181A1B] border border-[#222]">
                       <span>{user.username}</span>
+                      {subdomainLoading && <span>Loading...</span>}
+                      {subdomainError && <span className="text-red-500">{subdomainError}</span>}
                       <Switch
                         checked={!!subdomainUserOverrides[user.id]}
-                        onCheckedChange={v => setSubdomainUserOverrides(o => ({ ...o, [user.id]: v }))}
+                        onCheckedChange={v => handleSubdomainToggle(user.id, v)}
                       />
                     </div>
                   ))}

@@ -3,6 +3,8 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
+import fs from 'fs';
+import subdomainSettingsRouter from './routes/subdomain-settings';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -42,6 +44,38 @@ import {
 import watermarkSettingsRouter from "./routes/watermark-settings";
 import { requestAdminOTP, verifyAdminOTP } from "./routes/admin-auth";
 
+// Helper to get subdomain from host
+function getSubdomain(host: string) {
+  // Remove port if present
+  host = host.split(':')[0];
+  // Remove main domain
+  if (host.endsWith('x02.me')) {
+    const parts = host.split('.');
+    if (parts.length > 2) {
+      return parts[0]; // username.x02.me
+    }
+  }
+  return null;
+}
+
+// Helper to read subdomain-settings.json
+function getSubdomainSettings() {
+  const configPath = path.join(__dirname, '../subdomain-settings.json');
+  if (!fs.existsSync(configPath)) return {};
+  return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+}
+
+// Helper to update subdomain-settings.json
+function setSubdomainSetting(username: string, enabled: boolean) {
+  const configPath = path.join(__dirname, '../subdomain-settings.json');
+  let settings = {};
+  if (fs.existsSync(configPath)) {
+    settings = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+  }
+  settings[username] = enabled;
+  fs.writeFileSync(configPath, JSON.stringify(settings, null, 2));
+}
+
 export function createServer() {
   const app = express();
 
@@ -67,6 +101,29 @@ export function createServer() {
 
   // Serve user-specific images
   app.use("/i/users", express.static("uploads/users"));
+
+  // Middleware to handle subdomain image serving
+  app.use((req, res, next) => {
+    const host = req.headers.host || '';
+    const subdomain = getSubdomain(host);
+    if (subdomain) {
+      const settings = getSubdomainSettings();
+      if (settings[subdomain] === true) {
+        // Serve images from uploads/users/<subdomain>/
+        const imagePath = req.path.replace(/^\//, '');
+        const userImagePath = path.join(__dirname, '../uploads/users', subdomain, imagePath);
+        if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
+          return res.sendFile(userImagePath);
+        } else {
+          return res.status(404).send('Image not found');
+        }
+      } else {
+        // Instead of returning 403, fall through to default/static handler
+        return next();
+      }
+    }
+    next();
+  });
 
   // Public endpoints (no API key required)
   app.get("/api/ping", (_req, res) => {
@@ -137,6 +194,9 @@ export function createServer() {
 
   // Admin endpoints (protected by Discord OTP)
   app.use('/api/admin', adminRouter);
+
+  // Subdomain settings endpoints
+  app.use('/api/admin/subdomain-settings', subdomainSettingsRouter);
 
   // Only serve static files and SPA fallback in production
   if (process.env.NODE_ENV === "production") {
