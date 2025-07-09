@@ -214,6 +214,7 @@ export default function Index() {
               console.log("Updated images array:", updated); // Debug log
               return updated;
             });
+            setLoadingUploads(false);
             showToast("⚡ Upload successful!", "success");
             resolve();
           } else {
