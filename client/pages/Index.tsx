@@ -596,43 +596,50 @@ export default function Index() {
             </div>
           ) : (
             <div className="grid gap-4">
-              {uploadedImages.slice(0, 3).map((image) => (
-                <div
-                  key={image.id}
-                  className={`flex items-center gap-4 ${theme.card} p-3 transition-all duration-200 hover:shadow-md`}
-                >
-                  <img
-                    src={image.url}
-                    alt={image.originalName}
-                    className="w-16 h-16 object-cover rounded border border-gray-200"
-                  />
-                  <div className="flex-1">
-                    <div className="font-medium" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>{image.originalName}</div>
-                    <div className="text-blue-600 text-xs">
-                      {formatFileSize(image.size)} •{" "}
-                      {new Date(image.uploadedAt).toLocaleDateString()}
+              {uploadedImages.slice(0, 3).map((image) => {
+                let displayUrl = image.url;
+                if (subdomainMode === 'disabled') {
+                  const filename = image.url.split('/').pop();
+                  displayUrl = `https://x02.me/i/${filename}`;
+                }
+                return (
+                  <div
+                    key={image.id}
+                    className={`flex items-center gap-4 ${theme.card} p-3 transition-all duration-200 hover:shadow-md`}
+                  >
+                    <img
+                      src={displayUrl}
+                      alt={image.originalName}
+                      className="w-16 h-16 object-cover rounded border border-gray-200"
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>{image.originalName}</div>
+                      <div className="text-blue-600 text-xs">
+                        {formatFileSize(image.size)} •{" "}
+                        {new Date(image.uploadedAt).toLocaleDateString()}
+                      </div>
+                      <div className="text-blue-500 text-xs break-all">
+                        {displayUrl}
+                      </div>
                     </div>
-                    <div className="text-blue-500 text-xs break-all">
-                      {image.url}
-                    </div>
+                    <Button
+                      size="sm"
+                      className={`${theme.button} mr-2 rounded-xl shadow-md hover:shadow-lg transition-all backdrop-blur-md bg-white/80 dark:bg-black/60 border-none`}
+                      onClick={() => copyToClipboard(displayUrl)}
+                    >
+                      Copy Link
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className={`${theme.buttonOutline} mr-2 rounded-xl shadow-md hover:shadow-lg transition-all backdrop-blur-md bg-white/70 dark:bg-black/60 border-none`}
+                      onClick={() => window.open(displayUrl, "_blank")}
+                    >
+                      Open
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    className={`${theme.button} mr-2 rounded-xl shadow-md hover:shadow-lg transition-all backdrop-blur-md bg-white/80 dark:bg-black/60 border-none`}
-                    onClick={() => copyToClipboard(image.url)}
-                  >
-                    Copy Link
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className={`${theme.buttonOutline} mr-2 rounded-xl shadow-md hover:shadow-lg transition-all backdrop-blur-md bg-white/70 dark:bg-black/60 border-none`}
-                    onClick={() => window.open(image.url, "_blank")}
-                  >
-                    Open
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
