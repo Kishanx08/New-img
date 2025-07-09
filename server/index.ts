@@ -102,7 +102,10 @@ export function createServer() {
     const subdomain = getSubdomain(host);
     if (subdomain) {
       const mode = getSubdomainMode();
-      if (mode === 'disabled') return next();
+      if (mode === 'disabled') {
+        // Block all subdomain image requests when disabled
+        return res.status(404).send('Subdomain image access is disabled');
+      }
       if (mode === 'enabled') {
         // Serve images from uploads/users/<subdomain>/
         const imagePath = req.path.replace(/^\/i\//, '');
