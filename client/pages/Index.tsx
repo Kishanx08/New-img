@@ -85,9 +85,16 @@ export default function Index() {
     url: string;
     originalName: string;
   } | null>(null);
+  const [subdomainMode, setSubdomainMode] = useState('enabled');
 
   useEffect(() => {
     setMounted(true);
+
+    // Fetch subdomain mode
+    fetch('/api/admin/subdomain-settings/mode')
+      .then(res => res.json())
+      .then(data => setSubdomainMode(data.mode || 'enabled'))
+      .catch(() => setSubdomainMode('enabled'));
 
     // Load user session
     const sessionData = localStorage.getItem("x02_session");
@@ -359,36 +366,45 @@ export default function Index() {
         </div>
       )}
       {uploadedImageUrl && (
-        <div className="fixed top-4 left-0 right-0 z-50 flex justify-center pointer-events-none">
-          <div className="flex items-center gap-4 bg-gradient-to-br from-blue-50 via-white to-teal-50 border-2 border-blue-200 shadow-2xl rounded-2xl px-8 py-5 pointer-events-auto max-w-xl w-full transition-all duration-300">
-            <img
-              src={uploadedImageUrl.url}
-              alt={uploadedImageUrl.originalName}
-              className="w-16 h-16 object-cover rounded-xl border-2 border-blue-100 shadow-md"
-            />
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold text-base text-gray-900 truncate">{uploadedImageUrl.originalName}</div>
-              <div className="text-xs text-blue-600 break-all truncate max-w-xs cursor-pointer" title={uploadedImageUrl.url} onClick={() => copyToClipboard(uploadedImageUrl.url)}>
-                {uploadedImageUrl.url}
+        (() => {
+          let displayUrl = uploadedImageUrl.url;
+          if (subdomainMode === 'disabled') {
+            const filename = uploadedImageUrl.url.split('/').pop();
+            displayUrl = `https://x02.me/i/${filename}`;
+          }
+          return (
+            <div className="fixed top-4 left-0 right-0 z-50 flex justify-center pointer-events-none">
+              <div className="flex items-center gap-4 bg-gradient-to-br from-blue-50 via-white to-teal-50 border-2 border-blue-200 shadow-2xl rounded-2xl px-8 py-5 pointer-events-auto max-w-xl w-full transition-all duration-300">
+                <img
+                  src={displayUrl}
+                  alt={uploadedImageUrl.originalName}
+                  className="w-16 h-16 object-cover rounded-xl border-2 border-blue-100 shadow-md"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-base text-gray-900 truncate">{uploadedImageUrl.originalName}</div>
+                  <div className="text-xs text-blue-600 break-all truncate max-w-xs cursor-pointer" title={displayUrl} onClick={() => copyToClipboard(displayUrl)}>
+                    {displayUrl}
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-4 py-2 shadow"
+                  onClick={() => copyToClipboard(displayUrl)}
+                >
+                  Copy Link
+                </Button>
+                <button
+                  className="ml-2 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none rounded-full w-8 h-8 flex items-center justify-center transition-colors"
+                  onClick={() => setUploadedImageUrl(null)}
+                  aria-label="Close"
+                  style={{ lineHeight: 1 }}
+                >
+                  ×
+                </button>
               </div>
             </div>
-            <Button
-              size="sm"
-              className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-4 py-2 shadow"
-              onClick={() => copyToClipboard(uploadedImageUrl.url)}
-            >
-              Copy Link
-            </Button>
-            <button
-              className="ml-2 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none rounded-full w-8 h-8 flex items-center justify-center transition-colors"
-              onClick={() => setUploadedImageUrl(null)}
-              aria-label="Close"
-              style={{ lineHeight: 1 }}
-            >
-              ×
-            </button>
-          </div>
-        </div>
+          );
+        })()
       )}
       <header
         className={`w-full border-b ${theme.card} py-4 mb-8 relative z-10`}
