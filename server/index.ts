@@ -119,7 +119,7 @@ export function createServer() {
       if (mode === 'enabled') {
         // Serve images from uploads/users/<subdomain>/
         const imagePath = req.path.replace(/^\/i\//, '');
-        const userImagePath = path.join(__dirname, '../uploads/users', subdomain, imagePath);
+        const userImagePath = path.join(process.cwd(), 'uploads', 'users', subdomain, imagePath);
         console.log(`[Subdomain Serve] Checking for file: ${userImagePath}`);
         if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
           return res.sendFile(userImagePath);
@@ -131,7 +131,7 @@ export function createServer() {
       const settings = getSubdomainSettings();
       if (settings[subdomain] === true) {
         const imagePath = req.path.replace(/^\/i\//, '');
-        const userImagePath = path.join(__dirname, '../uploads/users', subdomain, imagePath);
+        const userImagePath = path.join(process.cwd(), 'uploads', 'users', subdomain, imagePath);
         console.log(`[Subdomain Serve] Checking for file: ${userImagePath}`);
         if (fs.existsSync(userImagePath) && fs.statSync(userImagePath).isFile()) {
           return res.sendFile(userImagePath);
