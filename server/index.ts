@@ -108,12 +108,6 @@ export function createServer() {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Serve uploaded images statically
-  app.use("/i", express.static("uploads"));
-
-  // Serve user-specific images
-  app.use("/i/users", express.static("uploads/users"));
-
   // Middleware to handle subdomain image serving
   app.use((req, res, next) => {
     const host = req.headers.host || '';
@@ -149,6 +143,10 @@ export function createServer() {
     }
     next();
   });
+
+  // Serve uploaded images statically
+  app.use("/i", express.static("uploads"));
+  app.use("/i/users", express.static("uploads/users"));
 
   // Public endpoints (no API key required)
   app.get("/api/ping", (_req, res) => {
