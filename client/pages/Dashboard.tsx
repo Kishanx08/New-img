@@ -573,7 +573,13 @@ function DashboardContent() {
             },
             {
               target: '.upload-section',
-          steps={tourSteps}
+              content: 'Here you can upload your images',
+            },
+            {
+              target: '.usage-section',
+              content: 'View your usage statistics here',
+            }
+          ]}
           continuous
           showSkipButton
           showProgress
@@ -582,7 +588,6 @@ function DashboardContent() {
               zIndex: 10000,
               primaryColor: '#0ea5e9',
               textColor: darkMode ? '#fff' : '#222',
-              backgroundColor: darkMode ? '#222' : '#fff',
             },
           }}
         />
