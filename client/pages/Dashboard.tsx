@@ -825,13 +825,25 @@ function DashboardContent() {
                       className="w-12 h-12 object-cover rounded border"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className={`font-medium truncate ${theme.text}`}>{upload.filename}</div>
+                      <div
+                        className={`font-medium truncate ${theme.text} max-w-full`}
+                        title={upload.filename}
+                        style={{ maxWidth: '100%' }}
+                      >
+                        {upload.filename}
+                      </div>
                       <div className={`text-sm ${theme.subtext}`}>
                         {formatFileSize(upload.size)} • {formatDate(upload.timestamp)}
                       </div>
-                      <div className={`text-xs break-all ${theme.subtext}`}>{upload.url}</div>
+                      <div
+                        className={`text-xs truncate ${theme.subtext} max-w-full`}
+                        title={upload.url}
+                        style={{ maxWidth: '100%' }}
+                      >
+                        {upload.url}
+                      </div>
                     </div>
-                    <div className="flex gap-2 flex-shrink-0">
+                    <div className="flex gap-2 flex-shrink-0 items-center">
                       <Button
                         size="sm"
                         className={`${theme.button} shadow-none hover:shadow-md transition-shadow`}
