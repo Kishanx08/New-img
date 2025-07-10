@@ -65,16 +65,22 @@ export const registerUser: RequestHandler = async (req, res) => {
     }
 
     // Remove special characters for subdomain compatibility
+    const originalUsername = username;
+    const blockedChars = Array.from(new Set((originalUsername.match(/[^a-z0-9]/gi) || []))).join(' ');
     username = username
       .toLowerCase()
       .replace(/[^a-z0-9]/g, ""); // Only keep lowercase letters and numbers
 
     // Validate username (alphanumeric, 3-20 chars)
     if (!/^[a-z0-9]{3,20}$/.test(username)) {
-      const response: AuthResponse = {
+      let errorMsg = "Username must be 3-20 characters and contain only lowercase letters and numbers.";
+      if (blockedChars.length > 0) {
+        errorMsg = `Your username contained blocked characters: [${blockedChars}].\nExample: johndoe2024`;
+      }
+      const response: AuthResponse & { sanitizedUsername?: string } = {
         success: false,
-        error:
-          "Username must be 3-20 characters and contain only lowercase letters and numbers (special characters are removed automatically)",
+        error: errorMsg,
+        sanitizedUsername: username,
       };
       return res.status(400).json(response);
     }
