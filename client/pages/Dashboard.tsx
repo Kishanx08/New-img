@@ -823,6 +823,7 @@ function DashboardContent() {
                       src={upload.url}
                       alt={upload.filename}
                       className="w-12 h-12 object-cover rounded border"
+                      loading="lazy"
                     />
                     <div className="flex-1 min-w-0">
                       <div
@@ -832,9 +833,7 @@ function DashboardContent() {
                       >
                         {upload.filename}
                       </div>
-                      <div className={`text-sm ${theme.subtext}`}>
-                        {formatFileSize(upload.size)} • {formatDate(upload.timestamp)}
-                      </div>
+                      <div className={`text-sm ${theme.subtext}`}>{formatFileSize(upload.size)} • {formatDate(upload.timestamp)}</div>
                       <div
                         className={`text-xs truncate ${theme.subtext} max-w-full`}
                         title={upload.url}
@@ -1024,7 +1023,7 @@ function DashboardContent() {
             </div>
             {/* Programming Examples Section */}
             <div className="mb-8">
-              <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${theme.accent}`}>
+              <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${theme.accent}`}> 
                 <Cpu className="h-5 w-5" />
                 Programming Examples
               </h3>
@@ -1045,7 +1044,7 @@ function DashboardContent() {
             </div>
             {/* Rate Limits Info Section */}
             <div>
-              <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${theme.accent}`}>
+              <h3 className={`text-lg font-semibold mb-3 flex items-center gap-2 ${theme.accent}`}> 
                 <Clock className="h-5 w-5" />
                 Rate Limits & Guidelines
               </h3>
