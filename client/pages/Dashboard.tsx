@@ -51,6 +51,7 @@ import {
 import { UserSession, AnonymousSession } from "@shared/auth-types";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import favicon from "/favicon.ico";
+import Joyride from 'react-joyride';
 
 interface Upload {
   filename: string;
@@ -69,6 +70,14 @@ function DashboardContent() {
     UserSession | AnonymousSession | null
   >(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('x02_tour_shown')) {
+      setShowTour(true);
+      localStorage.setItem('x02_tour_shown', '1');
+    }
+  }, []);
 
   useEffect(() => {
     // Get user session
@@ -555,9 +564,33 @@ function DashboardContent() {
       className={`min-h-screen relative overflow-hidden ${theme.bg} ${theme.text}${darkMode ? ' dark' : ''}`}
       style={{ fontFamily: "Inter, Poppins, Montserrat, sans-serif" }}
     >
+      {showTour && (
+        <Joyride
+          steps={[
+            {
+              target: '.dashboard-btn',
+              content: 'This is the main dashboard button',
+            },
+            {
+              target: '.upload-section',
+          steps={tourSteps}
+          continuous
+          showSkipButton
+          showProgress
+          styles={{
+            options: {
+              zIndex: 10000,
+              primaryColor: '#0ea5e9',
+              textColor: darkMode ? '#fff' : '#222',
+              backgroundColor: darkMode ? '#222' : '#fff',
+            },
+          }}
+        />
+      )}
       {/* Header */}
       <header
         className={`w-full border-b ${theme.card} py-4 mb-8 relative z-10`}
+        data-tour="dashboard-btn"
       >
         <div className="max-w-2xl mx-auto flex items-center gap-4 px-4">
           <img src={favicon} alt="logo" className="w-10 h-10 rounded-lg" />
@@ -619,6 +652,7 @@ function DashboardContent() {
               border: "1.5px solid #fff2",
               boxShadow: "0 2px 24px #00ff8033",
             }}
+            data-tour="api-key-card"
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -781,7 +815,7 @@ function DashboardContent() {
         </div>
 
         {/* Watermark Settings */}
-        <div className="mb-8">
+        <div className="mb-8" data-tour="watermark-settings">
           <WatermarkSettings />
         </div>
 
@@ -792,6 +826,7 @@ function DashboardContent() {
             border: "1.5px solid #fff2",
             boxShadow: "0 2px 24px #00ff8033",
           }}
+          data-tour="recent-uploads"
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -799,7 +834,7 @@ function DashboardContent() {
               Recent Uploads ({data?.uploads?.length || 0})
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent data-tour="upload-area">
             {!data?.uploads?.length ? (
               <div className="text-center py-8 text-muted-foreground">
                 <Upload className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -898,6 +933,7 @@ function DashboardContent() {
             border: "1.5px solid #fff2",
             boxShadow: "0 2px 24px #00ff8033",
           }}
+          data-tour="docs-section"
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
