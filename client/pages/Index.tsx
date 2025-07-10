@@ -473,7 +473,7 @@ export default function Index() {
   }
 
   return (
-    <div ref={dropRef} className="relative min-h-screen">
+    <div ref={dropRef} className={`relative min-h-screen ${theme.bg}`}>
       {uploading && (
         <div className="absolute inset-0 bg-white/80 dark:bg-black/60 flex items-center justify-center z-50">
           <span className="text-lg font-semibold text-blue-600 dark:text-blue-300 animate-pulse">Uploading...</span>
