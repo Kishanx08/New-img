@@ -87,6 +87,211 @@ export default function Index() {
   } | null>(null);
   const [subdomainMode, setSubdomainMode] = useState('enabled');
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const dropRef = useRef<HTMLDivElement>(null);
+
+  // Drag & Drop and Paste Handlers
+  useEffect(() => {
+    const dropZone = dropRef.current;
+    if (!dropZone) return;
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      setDragActive(true);
+    };
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      setDragActive(false);
+    };
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      setDragActive(false);
+      if (e.dataTransfer?.files?.length) {
+        handleFilesUpload(e.dataTransfer.files);
+      }
+    };
+    dropZone.addEventListener("dragover", handleDragOver);
+    dropZone.addEventListener("dragleave", handleDragLeave);
+    dropZone.addEventListener("drop", handleDrop);
+    return () => {
+      dropZone.removeEventListener("dragover", handleDragOver);
+      dropZone.removeEventListener("dragleave", handleDragLeave);
+      dropZone.removeEventListener("drop", handleDrop);
+    };
+  }, [dropRef.current]);
+
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      if (e.clipboardData?.files?.length) {
+        handleFilesUpload(e.clipboardData.files);
+      }
+    };
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, []);
+
+  const handleFilesUpload = async (fileList: FileList) => {
+    const file = fileList[0];
+    if (!file || !file.type.startsWith("image/")) {
+      showToast("Only image files are allowed.", "error");
+      return;
+    }
+    setUploading(true);
+    setUploadProgress(0);
+    const formData = new FormData();
+    formData.append("image", file);
+
+    try {
+      // Use XMLHttpRequest for progress
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api/upload");
+
+        // Add API key for registered users
+        if (userSession && !userSession.isAnonymous) {
+          xhr.setRequestHeader(
+            "x-api-key",
+            (userSession as UserSession).apiKey,
+          );
+        }
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            setUploadProgress(Math.round((event.loaded / event.total) * 100));
+          }
+        };
+        xhr.onload = () => {
+          setUploadProgress(null);
+          setUploading(false);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            const url = xhr.responseText.trim();
+            console.log("Upload successful, URL:", url); // Debug log
+            const newImage: UploadedImage = {
+              id: `${file.name}_${Date.now()}`, // Make ID unique
+              url,
+              originalName: file.name,
+              size: file.size,
+              uploadedAt: new Date().toISOString(),
+              apiKeyUsed:
+                userSession && !userSession.isAnonymous ? true : undefined,
+            };
+            console.log("New image object:", newImage); // Debug log
+            setUploadedImages((prev) => {
+              const updated = [newImage, ...prev];
+              console.log("Updated images array:", updated); // Debug log
+              return updated;
+            });
+            setLoadingUploads(false);
+            setUploadedImageUrl({ url, originalName: file.name });
+            setUploadSuccess(true);
+            showToast("⚡ Upload successful!", "success");
+            resolve();
+          } else {
+            console.error("Upload failed with status:", xhr.status, "Response:", xhr.responseText);
+            showToast(xhr.responseText || "Upload failed", "error");
+            reject(new Error(xhr.responseText || "Upload failed"));
+          }
+        };
+        xhr.onerror = () => {
+          setUploadProgress(null);
+          setUploading(false);
+          console.error("XHR error occurred during upload");
+          showToast("Upload failed", "error");
+          reject(new Error("Upload failed"));
+        };
+        xhr.send(formData);
+      });
+    } catch (error) {
+      setUploadProgress(null);
+      setUploading(false);
+      showToast(
+        error instanceof Error ? error.message : "Please try again",
+        "error",
+      );
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileUpload(e.target.files[0]);
+    }
+  };
+
+  const copyToClipboard = async (url: string) => {
+    // If url starts with http, use as is. Otherwise, prepend window.location.origin
+    const fullUrl = url.startsWith("http")
+      ? url
+      : `${window.location.origin}${url}`;
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      showToast("Link copied!", "success");
+    } catch (error) {
+      showToast("Copy failed", "error");
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const deleteImage = async (imageUrl: string, imageId: string) => {
+    try {
+      // Extract filename from URL
+      const filename = imageUrl.split("/").pop();
+      if (!filename) {
+        showToast("Cannot delete image: invalid URL", "error");
+        return;
+      }
+
+      const headers: Record<string, string> = {};
+
+      // Add API key for registered users
+      if (userSession && !userSession.isAnonymous) {
+        headers["x-api-key"] = (userSession as UserSession).apiKey;
+      }
+
+      const response = await fetch(`/i/${filename}`, {
+        method: "DELETE",
+        headers,
+      });
+
+      const result: DeleteImageResponse = await response.json();
+
+      if (result.success) {
+        // Remove from uploaded images list
+        setUploadedImages((prev) => prev.filter((img) => img.id !== imageId));
+        showToast("Image deleted successfully", "success");
+      } else {
+        showToast(result.error || "Failed to delete image", "error");
+      }
+    } catch (error) {
+      showToast("Failed to delete image", "error");
+    }
+  };
+
+  const theme = darkMode
+    ? {
+        bg: "bg-black",
+        card: "bg-black/60 border-green-800/40 text-white",
+        input: "bg-black/80 text-white border-green-800/40",
+        text: "text-white",
+        accent: "text-green-300 border-green-400",
+        subtext: "text-green-200/70",
+        button: "bg-green-700 hover:bg-green-600 text-white",
+        buttonOutline: "border-green-700 text-green-300 hover:bg-green-900/30",
+      }
+    : {
+        bg: "bg-gradient-to-br from-gray-100 via-blue-100 to-teal-50",
+        card: "bg-white border border-gray-200 rounded-xl shadow-md text-gray-900",
+        input: "bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:border-teal-400 focus:ring-1 focus:ring-teal-200",
+        text: "text-gray-900",
+        accent: "text-teal-600 border-teal-500",
+        subtext: "text-gray-500",
+        button: "bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-medium rounded px-4 py-2 shadow",
+        buttonOutline: "border border-teal-500 text-teal-600 hover:bg-teal-50 font-medium rounded px-4 py-2",
+      };
 
   useEffect(() => {
     setMounted(true);
@@ -256,90 +461,6 @@ export default function Index() {
     }
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileUpload(e.target.files[0]);
-    }
-  };
-
-  const copyToClipboard = async (url: string) => {
-    // If url starts with http, use as is. Otherwise, prepend window.location.origin
-    const fullUrl = url.startsWith("http")
-      ? url
-      : `${window.location.origin}${url}`;
-    try {
-      await navigator.clipboard.writeText(fullUrl);
-      showToast("Link copied!", "success");
-    } catch (error) {
-      showToast("Copy failed", "error");
-    }
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 B";
-    const k = 1024;
-    const sizes = ["B", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const deleteImage = async (imageUrl: string, imageId: string) => {
-    try {
-      // Extract filename from URL
-      const filename = imageUrl.split("/").pop();
-      if (!filename) {
-        showToast("Cannot delete image: invalid URL", "error");
-        return;
-      }
-
-      const headers: Record<string, string> = {};
-
-      // Add API key for registered users
-      if (userSession && !userSession.isAnonymous) {
-        headers["x-api-key"] = (userSession as UserSession).apiKey;
-      }
-
-      const response = await fetch(`/i/${filename}`, {
-        method: "DELETE",
-        headers,
-      });
-
-      const result: DeleteImageResponse = await response.json();
-
-      if (result.success) {
-        // Remove from uploaded images list
-        setUploadedImages((prev) => prev.filter((img) => img.id !== imageId));
-        showToast("Image deleted successfully", "success");
-      } else {
-        showToast(result.error || "Failed to delete image", "error");
-      }
-    } catch (error) {
-      showToast("Failed to delete image", "error");
-    }
-  };
-
-  const theme = darkMode
-    ? {
-        bg: "bg-black",
-        card: "bg-black/60 border-green-800/40 text-white",
-        input: "bg-black/80 text-white border-green-800/40",
-        text: "text-white",
-        accent: "text-green-300 border-green-400",
-        subtext: "text-green-200/70",
-        button: "bg-green-700 hover:bg-green-600 text-white",
-        buttonOutline: "border-green-700 text-green-300 hover:bg-green-900/30",
-      }
-    : {
-        bg: "bg-gradient-to-br from-gray-100 via-blue-100 to-teal-50",
-        card: "bg-white border border-gray-200 rounded-xl shadow-md text-gray-900",
-        input: "bg-white border border-gray-300 rounded px-3 py-2 text-gray-900 focus:border-teal-400 focus:ring-1 focus:ring-teal-200",
-        text: "text-gray-900",
-        accent: "text-teal-600 border-teal-500",
-        subtext: "text-gray-500",
-        button: "bg-gradient-to-r from-teal-500 to-blue-500 hover:from-teal-600 hover:to-blue-600 text-white font-medium rounded px-4 py-2 shadow",
-        buttonOutline: "border border-teal-500 text-teal-600 hover:bg-teal-50 font-medium rounded px-4 py-2",
-      };
-
   if (!mounted) {
     return (
       <div
@@ -352,10 +473,15 @@ export default function Index() {
   }
 
   return (
-    <div
-      className={`min-h-screen relative overflow-hidden ${theme.bg} ${theme.text}${darkMode ? ' dark' : ''}`}
-      style={{ fontFamily: "Inter, Poppins, Montserrat, sans-serif" }}
-    >
+    <div ref={dropRef} className="relative min-h-screen">
+      {uploading && (
+        <div className="absolute inset-0 bg-white/80 dark:bg-black/60 flex items-center justify-center z-50">
+          <span className="text-lg font-semibold text-blue-600 dark:text-blue-300 animate-pulse">Uploading...</span>
+        </div>
+      )}
+      <div className={`absolute inset-0 pointer-events-none flex items-center justify-center z-40 ${dragActive ? '' : 'hidden'}`} style={{background: 'rgba(56,189,248,0.08)'}}>
+        <span className="text-2xl font-bold text-blue-500">Drop image to upload</span>
+      </div>
       {/* Toast/response message */}
       {toast && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
@@ -647,10 +773,11 @@ export default function Index() {
           )}
         </section>
       </main>
-      <footer
-        className={`text-center ${theme.subtext} text-sm mt-12 mb-4 relative z-10`}
-      >
-        &copy; {new Date().getFullYear()} X02 Image Uploader
+      <footer className="w-full py-4 mt-12 bg-white/80 dark:bg-black/60 border-t border-gray-200 dark:border-zinc-800 text-center text-sm text-gray-500 dark:text-gray-400">
+        © X02 2025 &middot; Credits:
+        <a href="https://about.x02.me/" className="underline hover:text-blue-600 mx-1" target="_blank" rel="noopener noreferrer">Harry.dev</a>
+        &amp;
+        <a href="https://discord.com/users/1057573344855207966" className="underline hover:text-blue-600 mx-1" target="_blank" rel="noopener noreferrer">Kishan</a>
       </footer>
     </div>
   );
