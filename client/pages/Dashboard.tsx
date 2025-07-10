@@ -854,20 +854,20 @@ function DashboardContent() {
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-8 max-w-md w-full">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Image?</AlertDialogTitle>
-                            <AlertDialogDescription>
+                            <AlertDialogTitle className="text-xl font-bold text-gray-900 dark:text-white">Delete Image?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-gray-600 dark:text-gray-300">
                               This will permanently delete "{upload.filename}". This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel className="rounded-lg px-6 py-2 font-semibold border border-gray-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-all">No</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => deleteImage(upload.filename)}
-                              className={`rounded-lg px-6 py-2 font-semibold shadow-md transition-all border-none focus:outline-none focus:ring-2 focus:ring-red-400/60 focus:ring-offset-2 ${darkMode ? 'bg-red-700/80 text-white hover:bg-red-800/90' : 'bg-red-500/90 text-white hover:bg-red-600/90'} backdrop-blur-md`}
+                              className="rounded-lg px-6 py-2 font-semibold shadow-md transition-all border-none focus:outline-none focus:ring-2 focus:ring-red-400/60 focus:ring-offset-2 bg-red-500 text-white hover:bg-red-600 backdrop-blur-md"
                             >
-                              Delete
+                              Yes, Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
