@@ -594,8 +594,7 @@ function DashboardContent() {
       )}
       {/* Header */}
       <header
-        className={`w-full border-b ${theme.card} py-4 mb-8 relative z-10`}
-        data-tour="dashboard-btn"
+        className={`w-full border-b ${theme.card} py-4 mb-8 relative z-10 dashboard-btn`}
       >
         <div className="max-w-2xl mx-auto flex items-center gap-4 px-4">
           <img src={favicon} alt="logo" className="w-10 h-10 rounded-lg" />
@@ -652,12 +651,11 @@ function DashboardContent() {
         <div className="grid gap-6 md:grid-cols-3 mb-8">
           {/* API Key Info */}
           <Card
-            className={`${theme.card} backdrop-blur-lg border-2 rounded-xl`}
+            className={`${theme.card} backdrop-blur-lg border-2 rounded-xl upload-section`}
             style={{
               border: "1.5px solid #fff2",
               boxShadow: "0 2px 24px #00ff8033",
             }}
-            data-tour="api-key-card"
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -726,7 +724,7 @@ function DashboardContent() {
 
           {/* Usage Stats */}
           <Card
-            className={`${theme.card} backdrop-blur-lg border-2 rounded-xl`}
+            className={`${theme.card} backdrop-blur-lg border-2 rounded-xl usage-section`}
             style={{
               border: "1.5px solid #fff2",
               boxShadow: "0 2px 24px #00ff8033",
