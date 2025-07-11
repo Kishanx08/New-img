@@ -182,7 +182,6 @@ export default function Index() {
             setLoadingUploads(false);
             setUploadedImageUrl({ url, originalName: file.name });
             setUploadSuccess(true);
-            showToast("⚡ Upload successful!", "success");
             resolve();
           } else {
             console.error("Upload failed with status:", xhr.status, "Response:", xhr.responseText);
@@ -434,7 +433,6 @@ export default function Index() {
             setLoadingUploads(false);
             setUploadedImageUrl({ url, originalName: file.name });
             setUploadSuccess(true);
-            showToast("⚡ Upload successful!", "success");
             resolve();
           } else {
             console.error("Upload failed with status:", xhr.status, "Response:", xhr.responseText);
