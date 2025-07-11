@@ -26,6 +26,7 @@ import {
   AnonymousSession,
 } from "@shared/auth-types";
 import favicon from "/favicon.ico";
+import { useTheme } from "@/components/ui/ThemeContext";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ export default function Auth() {
   const [inputsVisible, setInputsVisible] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [usernameInvalid, setUsernameInvalid] = useState(false);
+  const { darkMode, toggleTheme } = useTheme();
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -204,8 +206,6 @@ export default function Auth() {
     window.location.href = "/";
   };
 
-  const [darkMode, setDarkMode] = useState(false);
-
   const theme = darkMode
     ? {
         bg: "bg-black",
@@ -251,7 +251,7 @@ export default function Auth() {
           <Button
             size="sm"
             className={darkMode ? 'border border-green-400 text-green-300 bg-black hover:bg-green-900/20 transition-colors' : theme.buttonOutline}
-            onClick={() => setDarkMode((d) => !d)}
+            onClick={toggleTheme}
           >
             {darkMode ? "Light Mode" : "Dark Mode"}
           </Button>

@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { useTheme } from "@/components/ui/ThemeContext";
 import {
   Upload,
   Image,
@@ -77,7 +78,7 @@ export default function Index() {
     message: string;
     type: "success" | "error";
   } | null>(null);
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimeout = useRef<NodeJS.Timeout | null>(null);
   const [loadingUploads, setLoadingUploads] = useState(true);
@@ -605,7 +606,7 @@ export default function Index() {
               <Button
                 size="sm"
                 className={darkMode ? 'border border-green-400 text-green-300 bg-black hover:bg-green-900/20 transition-colors' : 'border border-blue-500 bg-transparent text-blue-600 hover:bg-blue-50'}
-                onClick={() => setDarkMode((d) => !d)}
+                onClick={toggleTheme}
               >
                 {darkMode ? "Light Mode" : "Dark Mode"}
               </Button>

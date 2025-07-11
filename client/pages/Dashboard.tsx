@@ -52,6 +52,7 @@ import { UserSession, AnonymousSession } from "@shared/auth-types";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import favicon from "/favicon.ico";
 import Joyride from 'react-joyride';
+import { useTheme } from "@/components/ui/ThemeContext";
 
 interface Upload {
   filename: string;
@@ -69,7 +70,7 @@ function DashboardContent() {
   const [userSession, setUserSession] = useState<
     UserSession | AnonymousSession | null
   >(null);
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleTheme } = useTheme();
   const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
@@ -633,7 +634,7 @@ function DashboardContent() {
             <Button
               size="sm"
               className={darkMode ? 'border border-green-400 text-green-300 bg-black hover:bg-green-900/20 transition-colors' : 'border border-blue-500 bg-transparent text-blue-600 hover:bg-blue-50'}
-              onClick={() => setDarkMode((d) => !d)}
+              onClick={toggleTheme}
             >
               {darkMode ? "Light Mode" : "Dark Mode"}
             </Button>
