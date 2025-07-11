@@ -3,6 +3,16 @@ import multer from "multer";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
+
+function randomString(length: number) {
+  // Exclude ambiguous chars: O/0, I/1, L
+  const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
 import {
   UploadResponse,
   ErrorResponse,
@@ -158,11 +168,7 @@ const storage = multer.diskStorage({
     cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
-    const sanitized = sanitizeFilename(file.originalname);
-    const name = path.parse(sanitized).name;
-    const extension = path.extname(sanitized);
-
-    // Get destination folder for checking existing files
+    const extension = path.extname(file.originalname).toLowerCase();
     const apiKey = req.headers["x-api-key"] as string;
     let destinationFolder = uploadsDir;
 
@@ -185,8 +191,19 @@ const storage = multer.diskStorage({
       }
     }
 
-    // Get next available number: filename_01.ext, filename_02.ext, etc.
-    const finalFilename = getNextFileNumber(name, extension, destinationFolder);
+    // Generate a unique, short random name (7-9 chars)
+    let finalFilename = "";
+    let attempts = 0;
+    do {
+      const length = Math.floor(Math.random() * 3) + 4; // 4-6 chars
+      const randomName = randomString(length);
+      finalFilename = `${randomName}${extension}`;
+      attempts++;
+      if (attempts > 10) {
+        finalFilename = `${randomName}${uuidv4().slice(0, 2)}${extension}`;
+        break;
+      }
+    } while (fs.existsSync(path.join(destinationFolder, finalFilename)));
     cb(null, finalFilename);
   },
 });
