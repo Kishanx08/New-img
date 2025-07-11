@@ -707,7 +707,7 @@ export default function Index() {
           </section>
         )}
         <section>
-          <h2 className="text-lg font-semibold mb-4" style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>Most Recent Uploads</h2>
+          <h2 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-black'}`} style={{ fontFamily: 'Poppins, Inter, sans-serif' }}>Most Recent Uploads</h2>
           {loadingUploads ? (
             <div className="grid gap-4">
               {[1, 2, 3].map((i) => (
