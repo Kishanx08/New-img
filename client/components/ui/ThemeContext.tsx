@@ -9,11 +9,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [darkMode, setDarkMode] = useState(() => {
-    // Try to load from localStorage, fallback to system preference
+    // Try to load from localStorage, default to light
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('theme');
       if (stored) return stored === 'dark';
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return false; // default to light
     }
     return false;
   });
