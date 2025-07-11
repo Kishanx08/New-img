@@ -37,6 +37,8 @@ export default function Auth() {
     password: "",
   });
   const [inputsVisible, setInputsVisible] = useState(false);
+  const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [usernameInvalid, setUsernameInvalid] = useState(false);
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -55,15 +57,29 @@ export default function Auth() {
     setInputsVisible(true);
   }, [navigate]);
 
+  const blockedCharRegex = /[^a-zA-Z0-9_]/;
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name === "username") {
+      const match = value.match(blockedCharRegex);
+      if (match) {
+        setUsernameError(`'${match[0]}' is blocked and don't use special characters.`);
+        setUsernameInvalid(true);
+      } else {
+        setUsernameError(null);
+        setUsernameInvalid(false);
+      }
+    }
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (usernameError) return; // Prevent submission if error
     setLoading(true);
 
     try {
@@ -283,7 +299,11 @@ export default function Auth() {
                           maxLength={20}
                           pattern="[a-zA-Z0-9_]+"
                           title="Username must be 3-20 characters and contain only letters, numbers, and underscores"
+                          className={usernameInvalid ? "border-red-500 focus:border-red-500 ring-red-300" : ""}
                         />
+                        {usernameError && (
+                          <p className="text-xs text-red-500 mt-1">{usernameError}</p>
+                        )}
                       </div>
                       <div className={inputsVisible ? "animate-slidefade" : "opacity-0"}>
                         <div className="relative">
