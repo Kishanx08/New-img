@@ -230,7 +230,7 @@ export default function Auth() {
 
   return (
     <div
-      className={`min-h-screen relative overflow-hidden ${theme.bg} ${theme.text}${darkMode ? ' dark' : ''}`}
+      className={`min-h-screen flex flex-col relative overflow-hidden ${theme.bg} ${theme.text}${darkMode ? ' dark' : ''}`}
       style={{ fontFamily: "Inter, Poppins, Montserrat, sans-serif" }}
     >
       {/* Header */}
@@ -441,11 +441,11 @@ export default function Auth() {
         </div>
       </div>
 
-      <footer
-        className={`text-center ${theme.subtext} text-sm mt-12 mb-4 relative z-10`}
-        style={{ fontFamily: 'Poppins, Inter, sans-serif' }}
-      >
-        &copy; {new Date().getFullYear()} X02 Image Uploader
+      <footer className="w-full py-4 mt-auto bg-white/80 dark:bg-black/60 border-t border-gray-200 dark:border-zinc-800 text-center text-sm text-gray-500 dark:text-gray-400">
+        © X02 2025 &middot; Credits:
+        <a href="https://about.x02.me/" className="underline hover:text-blue-600 mx-1" target="_blank" rel="noopener noreferrer">Harry.dev</a>
+        &amp;
+        <a href="https://discord.com/users/1057573344855207966" className="underline hover:text-blue-600 mx-1" target="_blank" rel="noopener noreferrer">Kishan</a>
       </footer>
       <style>{`
         @keyframes slidefade {

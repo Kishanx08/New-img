@@ -471,7 +471,7 @@ export default function Index() {
   }
 
   return (
-    <div ref={dropRef} className={`relative min-h-screen ${theme.bg}`}>
+    <div ref={dropRef} className={`relative min-h-screen flex flex-col ${theme.bg}`}>
       {uploading && (
         <div className="absolute inset-0 bg-white/80 dark:bg-black/60 flex items-center justify-center z-50">
           <span className="text-lg font-semibold text-blue-600 dark:text-blue-300 animate-pulse">Uploading...</span>
@@ -771,7 +771,7 @@ export default function Index() {
           )}
         </section>
       </main>
-      <footer className="w-full py-4 mt-12 bg-white/80 dark:bg-black/60 border-t border-gray-200 dark:border-zinc-800 text-center text-sm text-gray-500 dark:text-gray-400">
+      <footer className="w-full py-4 mt-auto bg-white/80 dark:bg-black/60 border-t border-gray-200 dark:border-zinc-800 text-center text-sm text-gray-500 dark:text-gray-400">
         © X02 2025 &middot; Credits:
         <a href="https://about.x02.me/" className="underline hover:text-blue-600 mx-1" target="_blank" rel="noopener noreferrer">Harry.dev</a>
         &amp;
