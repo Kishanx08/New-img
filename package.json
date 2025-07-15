@@ -1,7 +1,7 @@
 {
   "name": "fusion-starter",
   "private": true,
-  "type": "module",
+  "type": "commonjs",
   "pkg": {
     "assets": [
       "dist/spa/*"

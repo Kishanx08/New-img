@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Enviroment files
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -39,3 +42,11 @@ uploads/users/*/
 
 ecosystem.config.js
 ecosystem.config.json
+
+# by chatgpt
+uploads/*
+!uploads/**/.gitkeep
+subdomain-settings.json
+subdomain-mode.json
+*.log
+dist/
