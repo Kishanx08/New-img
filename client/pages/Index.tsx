@@ -82,10 +82,7 @@ export default function Index() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toastTimeout = useRef<NodeJS.Timeout | null>(null);
   const [loadingUploads, setLoadingUploads] = useState(true);
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<{
-    url: string;
-    originalName: string;
-  } | null>(null);
+
   const [subdomainMode, setSubdomainMode] = useState('enabled');
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
@@ -181,7 +178,6 @@ export default function Index() {
               return updated;
             });
             setLoadingUploads(false);
-            setUploadedImageUrl({ url, originalName: file.name });
             setUploadSuccess(true);
             resolve();
           } else {
@@ -432,7 +428,6 @@ export default function Index() {
               return updated;
             });
             setLoadingUploads(false);
-            setUploadedImageUrl({ url, originalName: file.name });
             setUploadSuccess(true);
             resolve();
           } else {
@@ -492,47 +487,7 @@ export default function Index() {
           </div>
         </div>
       )}
-      {uploadedImageUrl && (
-        (() => {
-          let displayUrl = uploadedImageUrl.url;
-          if (subdomainMode === 'disabled') {
-            const filename = uploadedImageUrl.url.split('/').pop();
-            displayUrl = `https://x02.me/i/${filename}`;
-          }
-          return (
-            <div className="fixed top-4 left-0 right-0 z-50 flex justify-center pointer-events-none">
-              <div className="flex items-center gap-4 bg-gradient-to-br from-blue-50 via-white to-teal-50 border-2 border-blue-200 shadow-2xl rounded-2xl px-8 py-5 pointer-events-auto max-w-xl w-full transition-all duration-300">
-                <img
-                  src={displayUrl}
-                  alt={uploadedImageUrl.originalName}
-                  className="w-16 h-16 object-cover rounded-xl border-2 border-blue-100 shadow-md"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-base text-gray-900 truncate">{uploadedImageUrl.originalName}</div>
-                  <div className="text-xs text-blue-600 break-all truncate max-w-xs cursor-pointer" title={displayUrl} onClick={() => copyToClipboard(displayUrl)}>
-                    {displayUrl}
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-4 py-2 shadow"
-                  onClick={() => copyToClipboard(displayUrl)}
-                >
-                  Copy Link
-                </Button>
-                <button
-                  className="ml-2 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none rounded-full w-8 h-8 flex items-center justify-center transition-colors"
-                  onClick={() => setUploadedImageUrl(null)}
-                  aria-label="Close"
-                  style={{ lineHeight: 1 }}
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          );
-        })()
-      )}
+
       {uploadSuccess && (
         <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
           <div className="bg-green-100 text-green-800 px-4 py-2 rounded mb-4 text-center font-medium shadow">Upload successful!</div>
