@@ -53,6 +53,7 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import favicon from "/favicon.ico";
 import Joyride from 'react-joyride';
 import { useTheme } from "@/components/ui/ThemeContext";
+import { ColorPicker } from "@/components/ui/color-picker";
 
 interface Upload {
   filename: string;
@@ -392,15 +393,12 @@ function DashboardContent() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className={theme.text}>Color</Label>
-                <Input
-                  type="color"
-                  value={watermarkColor}
-                  onChange={(e) => setWatermarkColor(e.target.value)}
-                  className="w-20 h-10 p-1 rounded-lg shadow-lg border-none outline-none ring-2 ring-teal-200/40 bg-white/80 dark:bg-black/60 transition-all"
-                />
-              </div>
+              <ColorPicker
+                value={watermarkColor}
+                onChange={setWatermarkColor}
+                label="Watermark Color"
+                className={theme.text}
+              />
 
               <div className="space-y-2">
                 <Label className={theme.text}>Padding: {watermarkPadding}px</Label>
